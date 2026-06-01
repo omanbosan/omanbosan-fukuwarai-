@@ -159,8 +159,10 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   #main-layout { flex-direction: column; align-items: center; gap: 4px; padding: 4px; }
   #controls { width: 100% !important; max-width: 460px; }
   .ctrl-btn { font-size: 0.8rem; padding: 7px 4px; }
-  /* Hide rotation/scale buttons on mobile - gesture-based instead */
   #rot-panel { display: none; }
+  #mobile-ctrl-bar { display: flex !important; }
+  #controls h3 { display: none; }
+  #controls { gap: 6px; padding: 4px 0; }
   .modal-box { width: 95vw; max-height: 90vh; overflow-y: auto; padding: 16px; }
   #result-composite { max-width: 100%; height: auto; }
   #mode-bar { width: 100%; }
@@ -182,7 +184,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button id="mode-draw" class="mode-btn">✏️ フリーハンド</button>
   </div>
   <div id="canvas-wrap"><div id="play-canvas">
-    <svg id="face-bg" width="460" height="390" viewBox="0 0 460 390"
+    <svg id="face-bg" width="460" height="500" viewBox="0 0 460 500"
          style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;">
       <circle cx="230" cy="193" r="182" fill="white" stroke="#111" stroke-width="11"/>
     </svg>
@@ -200,6 +202,16 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <button id="fh-redo-btn" style="display:none; margin-top:6px; padding:6px 16px; background:#e67e22; color:white; border:none; border-radius:6px; font-size:0.85rem; cursor:pointer;">もう一度</button>
     </div>
   </div></div>
+
+  <!-- モバイル用コンパクトコントロール -->
+  <div id="mobile-ctrl-bar" style="display:none; flex-wrap:wrap; gap:5px; justify-content:center; padding:6px 4px; width:100%; max-width:460px;">
+    <button onclick="rotateSelected(-10)" style="flex:1;min-width:60px;padding:10px 4px;background:#7f8c8d;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:bold;">↺10°</button>
+    <button onclick="rotateSelected(-1)"  style="flex:1;min-width:50px;padding:10px 4px;background:#95a5a6;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:bold;">↺1°</button>
+    <button onclick="rotateSelected(1)"   style="flex:1;min-width:50px;padding:10px 4px;background:#95a5a6;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:bold;">↻1°</button>
+    <button onclick="rotateSelected(10)"  style="flex:1;min-width:60px;padding:10px 4px;background:#7f8c8d;color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:bold;">↻10°</button>
+    <button onclick="scaleSelected(0.85)" style="flex:1;min-width:50px;padding:10px 4px;background:#e67e22;color:white;border:none;border-radius:8px;font-size:1rem;font-weight:bold;">🔍−</button>
+    <button onclick="scaleSelected(1.18)" style="flex:1;min-width:50px;padding:10px 4px;background:#e67e22;color:white;border:none;border-radius:8px;font-size:1rem;font-weight:bold;">🔍＋</button>
+  </div>
 
   <div id="controls">
     <h3>🎮 操作</h3>
@@ -408,15 +420,20 @@ function applyGameScale() {
   const maxW = Math.min(460, window.innerWidth - 16);
   _gameScale = maxW / 460;
   const canvas = document.getElementById('play-canvas');
-  const wrap = document.getElementById('canvas-wrap');
+  const wrap   = document.getElementById('canvas-wrap');
   if (_gameScale < 1) {
-    canvas.style.transform = `scale(${_gameScale})`;
-    wrap.style.width = (460 * _gameScale) + 'px';
-    wrap.style.height = (500 * _gameScale) + 'px';
+    canvas.style.transform       = `scale(${_gameScale})`;
+    canvas.style.transformOrigin = 'top left';
+    wrap.style.width    = (460 * _gameScale) + 'px';
+    wrap.style.height   = (500 * _gameScale) + 'px';
+    wrap.style.overflow = 'hidden';
+    wrap.style.margin   = '0 auto';
   } else {
     canvas.style.transform = '';
-    wrap.style.width = '';
-    wrap.style.height = '';
+    wrap.style.width    = '';
+    wrap.style.height   = '';
+    wrap.style.overflow = '';
+    wrap.style.margin   = '';
   }
 }
 window.addEventListener('resize', applyGameScale);
