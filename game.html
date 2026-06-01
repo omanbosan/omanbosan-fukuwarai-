@@ -1043,7 +1043,7 @@ async function renderResultCanvas() {
     FH_PART_ORDER.forEach(key => {
       const strokes = fhStrokes[key] || [];
       ctx.strokeStyle = '#111';
-      ctx.lineWidth = 22;
+      ctx.lineWidth = 8;
       ctx.lineCap = 'round';
       strokes.forEach(stroke => {
         if (stroke.length < 2) return;
@@ -1242,7 +1242,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
     FH_PART_ORDER.forEach(key => {
       const strokes = fhStrokes[key] || [];
       ctx.strokeStyle = '#111';
-      ctx.lineWidth = 22;
+      ctx.lineWidth = 8;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       strokes.forEach(stroke => {
