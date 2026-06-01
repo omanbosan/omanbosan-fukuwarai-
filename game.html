@@ -274,9 +274,15 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <div style="background:rgba(255,165,0,0.2);border-radius:10px;padding:10px;margin-bottom:16px;font-size:0.8rem;">
     💡 チラ見ボタンで2秒だけ正解の顔が見られます（3回まで）
   </div>
-  <button onclick="document.getElementById('how-to-overlay').style.display='none'; startCountdown();" style="padding:14px 32px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:1.1rem;font-weight:bold;cursor:pointer;width:100%;">
-    ゲームスタート！
-  </button>
+  <div style="font-size:1rem;font-weight:bold;margin-bottom:10px;">🎮 モードを選んでスタート！</div>
+  <div style="display:flex;gap:12px;width:100%;">
+    <button onclick="selectModeAndStart('parts')" style="flex:1;padding:16px 8px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;line-height:1.4;">
+      🎯 パーツ配置<br><span style="font-size:0.75rem;font-weight:normal;">ドラッグして配置</span>
+    </button>
+    <button onclick="selectModeAndStart('freehand')" style="flex:1;padding:16px 8px;background:#8e44ad;color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;line-height:1.4;">
+      ✏️ フリーハンド<br><span style="font-size:0.75rem;font-weight:normal;">手書きで描く</span>
+    </button>
+  </div>
 </div>
 
 <!-- 開始オーバーレイ -->
@@ -716,7 +722,13 @@ function startCountdown() {
       cntEl.textContent = 'スタート！';
       cntEl.style.fontSize = 'clamp(1.4rem, 8vw, 4rem)';
       msgEl.textContent = '目隠しスタート！';
-      setTimeout(() => { overlay.style.display = 'none'; }, 700);
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        // フリーハンドモードが選択されていれば自動開始
+        if (document.getElementById('mode-draw').classList.contains('active')) {
+          startFreehandMode();
+        }
+      }, 700);
     } else { cntEl.textContent = n; }
   }, 1000);
 }
@@ -1350,6 +1362,23 @@ document.getElementById('reset-btn').addEventListener('click', () => {
   document.getElementById('how-to-overlay').style.display = 'flex';
   initParts();
 });
+
+// ================================================================
+// モード選択してスタート
+// ================================================================
+function selectModeAndStart(mode) {
+  document.getElementById('how-to-overlay').style.display = 'none';
+  if (mode === 'freehand') {
+    // フリーハンドモードに切替
+    document.getElementById('mode-draw').classList.add('active');
+    document.getElementById('mode-place').classList.remove('active');
+  } else {
+    // パーツ配置モードに切替
+    document.getElementById('mode-place').classList.add('active');
+    document.getElementById('mode-draw').classList.remove('active');
+  }
+  startCountdown();
+}
 
 // ================================================================
 // 起動
