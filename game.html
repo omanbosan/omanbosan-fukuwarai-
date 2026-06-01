@@ -1039,20 +1039,28 @@ async function renderResultCanvas() {
   }
 
   if (isFreehand) {
-    const colors = {hair:'#e74c3c',reye:'#3498db',leye:'#2ecc71',nose:'#f39c12',mouth:'#9b59b6'};
-    FH_PART_ORDER.forEach(key => {
-      const strokes = fhStrokes[key] || [];
-      ctx.strokeStyle = '#111';
-      ctx.lineWidth = 8;
-      ctx.lineCap = 'round';
-      strokes.forEach(stroke => {
-        if (stroke.length < 2) return;
-        ctx.beginPath();
-        ctx.moveTo(stroke[0].x, stroke[0].y);
-        stroke.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.stroke();
+    // fh-result-canvasのカラフルな線をそのまま転写
+    const fhResultC = document.getElementById('fh-result-canvas');
+    if (fhResultC) {
+      ctx.drawImage(fhResultC, 0, 0);
+    } else {
+      // fallback: 同じcolors/lineWidthで再描画
+      const colors = {hair:'#e74c3c',reye:'#3498db',leye:'#2ecc71',nose:'#f39c12',mouth:'#9b59b6'};
+      FH_PART_ORDER.forEach(key => {
+        const strokes = fhStrokes[key] || [];
+        ctx.strokeStyle = colors[key] || '#333';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        strokes.forEach(stroke => {
+          if (stroke.length < 2) return;
+          ctx.beginPath();
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          stroke.forEach(p => ctx.lineTo(p.x, p.y));
+          ctx.stroke();
+        });
       });
-    });
+    }
   }
 }
 
@@ -1238,21 +1246,27 @@ document.getElementById('export-btn').addEventListener('click', async () => {
       });
     }
   } else {
-    // フリーハンドモード: 手書きストロークのみ黒で描画
-    FH_PART_ORDER.forEach(key => {
-      const strokes = fhStrokes[key] || [];
-      ctx.strokeStyle = '#111';
-      ctx.lineWidth = 8;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      strokes.forEach(stroke => {
-        if (stroke.length < 2) return;
-        ctx.beginPath();
-        ctx.moveTo(stroke[0].x, stroke[0].y);
-        stroke.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.stroke();
+    // フリーハンドモード: fh-result-canvasのカラフルな線をそのまま転写
+    const fhResultC = document.getElementById('fh-result-canvas');
+    if (fhResultC) {
+      ctx.drawImage(fhResultC, 0, 0);
+    } else {
+      const colors = {hair:'#e74c3c',reye:'#3498db',leye:'#2ecc71',nose:'#f39c12',mouth:'#9b59b6'};
+      FH_PART_ORDER.forEach(key => {
+        const strokes = fhStrokes[key] || [];
+        ctx.strokeStyle = colors[key] || '#333';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        strokes.forEach(stroke => {
+          if (stroke.length < 2) return;
+          ctx.beginPath();
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          stroke.forEach(p => ctx.lineTo(p.x, p.y));
+          ctx.stroke();
+        });
       });
-    });
+    }
   }
 
   const link = document.createElement('a');
