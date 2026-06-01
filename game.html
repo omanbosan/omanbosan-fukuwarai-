@@ -440,9 +440,7 @@ function applyGameScale() {
     wrap.style.marginLeft  = 'auto';
     wrap.style.marginRight = 'auto';
     wrap.style.display = 'block';
-    // フリーハンドキャンバスもリサイズ
-    const fhC = document.getElementById('fh-canvas');
-    if (fhC) { fhC.style.width = (460 * _gameScale) + 'px'; fhC.style.height = (400 * _gameScale) + 'px'; }
+    // fh-canvasはplay-canvas内にあり親のtransformで既にスケールされるので個別リサイズ不要
   } else {
     canvas.style.transform      = '';
     canvas.style.transformOrigin = '';
@@ -891,10 +889,12 @@ function setupFhCanvas() {
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
     const src = e.touches ? e.touches[0] : e;
-    // _gameScaleでスケールされているので割り戻す
+    // canvas内部解像度と表示サイズの比率で正確に変換
+    const scaleX = canvas.width  / rect.width;
+    const scaleY = canvas.height / rect.height;
     return {
-      x: (src.clientX - rect.left) / _gameScale,
-      y: (src.clientY - rect.top)  / _gameScale
+      x: (src.clientX - rect.left) * scaleX,
+      y: (src.clientY - rect.top)  * scaleY
     };
   }
 
