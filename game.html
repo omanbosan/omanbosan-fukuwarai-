@@ -25,6 +25,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   position: relative; width: 460px; height: 500px;
   background: #fff; border-radius: 16px; border: 3px solid #ddd;
   box-shadow: 0 4px 20px rgba(0,0,0,0.12); overflow: visible;
+  transform-origin: top left;
+}
+#canvas-wrap {
+  overflow: visible;
+  position: relative;
 }
 
 /* ─── パーツ ─── */
@@ -151,10 +156,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 @media (max-width: 600px) {
   body { padding: 8px; }
   h1 { font-size: 1.3rem; }
-  #main-layout { flex-direction: column; align-items: center; gap: 8px; }
-  #play-canvas { width: 100% !important; max-width: 460px; }
-  #controls { width: 100% !important; max-width: 460px; flex-direction: row; flex-wrap: wrap; justify-content: center; }
-  .ctrl-btn { flex: 1; min-width: 120px; }
+  #main-layout { flex-direction: column; align-items: center; gap: 4px; padding: 4px; }
+  #controls { width: 100% !important; max-width: 460px; }
+  .ctrl-btn { font-size: 0.8rem; padding: 7px 4px; }
+  /* Hide rotation/scale buttons on mobile - gesture-based instead */
+  #rot-panel { display: none; }
   .modal-box { width: 95vw; max-height: 90vh; overflow-y: auto; padding: 16px; }
   #result-composite { max-width: 100%; height: auto; }
   #mode-bar { width: 100%; }
@@ -175,7 +181,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button id="mode-place" class="mode-btn active">🎯 パーツ配置</button>
     <button id="mode-draw" class="mode-btn">✏️ フリーハンド</button>
   </div>
-  <div id="play-canvas">
+  <div id="canvas-wrap"><div id="play-canvas">
     <svg id="face-bg" width="460" height="390" viewBox="0 0 460 390"
          style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;">
       <circle cx="230" cy="193" r="182" fill="white" stroke="#111" stroke-width="11"/>
@@ -193,7 +199,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <button id="fh-next-btn" style="display:none; margin-top:12px; padding:10px 24px; background:#27ae60; color:white; border:none; border-radius:8px; font-size:1rem; cursor:pointer;">次へ →</button>
       <button id="fh-redo-btn" style="display:none; margin-top:6px; padding:6px 16px; background:#e67e22; color:white; border:none; border-radius:6px; font-size:0.85rem; cursor:pointer;">もう一度</button>
     </div>
-  </div>
+  </div></div>
 
   <div id="controls">
     <h3>🎮 操作</h3>
@@ -226,6 +232,32 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button class="ctrl-btn btn-rank"  id="rank-btn">🏆 ランキング</button>
     <div id="placed-status">配置状況：</div>
   </div>
+</div>
+
+<!-- 遊び方オーバーレイ -->
+<div id="how-to-overlay" style="position:fixed;inset:0;background:rgba(10,10,10,0.95);z-index:900;border-radius:0;display:none;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:20px 16px;color:white;text-align:center;">
+  <div style="font-size:1.3rem;font-weight:bold;margin-bottom:12px;">🎭 遊び方</div>
+  <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:12px;margin-bottom:10px;width:100%;text-align:left;font-size:0.85rem;line-height:1.7;">
+    <b>🎯 パーツ配置モード</b><br>
+    ① 顔のパーツをドラッグして顔に配置<br>
+    ② 指2本でピンチ→拡大縮小<br>
+    ② 指2本で回転→角度調整<br>
+    ③ PCはボタンで回転・サイズ変更も可<br>
+    ④「採点する」で結果を確認！
+  </div>
+  <div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:12px;margin-bottom:10px;width:100%;text-align:left;font-size:0.85rem;line-height:1.7;">
+    <b>✏️ フリーハンドモード</b><br>
+    ① 見本の顔をよく覚える<br>
+    ② 画面が暗くなったら一筆書きでパーツを描く（見えません！）<br>
+    ③ 全5パーツ描いたら採点<br>
+    ④ 見本との重なり具合でスコアが決まる！
+  </div>
+  <div style="background:rgba(255,165,0,0.2);border-radius:10px;padding:10px;margin-bottom:16px;font-size:0.8rem;">
+    💡 チラ見ボタンで2秒だけ正解の顔が見られます（3回まで）
+  </div>
+  <button onclick="document.getElementById('how-to-overlay').style.display='none'; startCountdown();" style="padding:14px 32px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:1.1rem;font-weight:bold;cursor:pointer;width:100%;">
+    ゲームスタート！
+  </button>
 </div>
 
 <!-- 開始オーバーレイ -->
@@ -370,6 +402,25 @@ let peekCooldown  = false;
 let lastScore     = 0;
 const WEBHOOK_URL = ''; // Set this to Google Apps Script doPost URL
 
+let _gameScale = 1;
+
+function applyGameScale() {
+  const maxW = Math.min(460, window.innerWidth - 16);
+  _gameScale = maxW / 460;
+  const canvas = document.getElementById('play-canvas');
+  const wrap = document.getElementById('canvas-wrap');
+  if (_gameScale < 1) {
+    canvas.style.transform = `scale(${_gameScale})`;
+    wrap.style.width = (460 * _gameScale) + 'px';
+    wrap.style.height = (500 * _gameScale) + 'px';
+  } else {
+    canvas.style.transform = '';
+    wrap.style.width = '';
+    wrap.style.height = '';
+  }
+}
+window.addEventListener('resize', applyGameScale);
+
 // ================================================================
 // パーツ初期化
 // ================================================================
@@ -435,10 +486,20 @@ function positionInTray() {
 // ================================================================
 function makeDraggable(el, key) {
   let sx, sy, el0x, el0y, dragging = false;
-  const pt = e => e.touches ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : {x:e.clientX,y:e.clientY};
+  const pt = e => {
+    const src = e.touches ? e.touches[0] : e;
+    const rect = document.getElementById('play-canvas').getBoundingClientRect();
+    return {
+      x: (src.clientX - rect.left) / _gameScale,
+      y: (src.clientY - rect.top) / _gameScale
+    };
+  };
 
   function onDown(e) {
     e.preventDefault();
+    // Handle 2-finger start separately
+    if (e.touches && e.touches.length === 2) { onPinchStart(e); return; }
+
     if (selectedPart && selectedPart !== key) {
       const prev = partEls[selectedPart];
       if (prev) prev.classList.remove('selected');
@@ -448,27 +509,65 @@ function makeDraggable(el, key) {
     updateRotUI();
 
     dragging = true;
-    const p = pt(e); sx=p.x; sy=p.y;
+    const p = pt(e);
+    sx = p.x; sy = p.y;
     el0x = parseFloat(el.style.left)||0;
     el0y = parseFloat(el.style.top) ||0;
     el.style.zIndex = 300;
     document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup',   onUp);
-    document.addEventListener('touchmove', onMove, {passive:false});
-    document.addEventListener('touchend',  onUp);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMultiMove, {passive:false});
+    document.addEventListener('touchend', onUp);
   }
+
   function onMove(e) {
     if (!dragging) return; e.preventDefault();
     const p = pt(e);
     el.style.left = (el0x + p.x - sx) + 'px';
     el.style.top  = (el0y + p.y - sy) + 'px';
   }
+
+  // 2-finger pinch+rotate
+  let pinchStartDist = 0, pinchStartAngle = 0, pinchStartScale = 1, pinchStartRot = 0;
+
+  function getPinchDist(t) {
+    const dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+  function getPinchAngle(t) {
+    return Math.atan2(t[1].clientY - t[0].clientY, t[1].clientX - t[0].clientX) * 180 / Math.PI;
+  }
+
+  function onPinchStart(e) {
+    dragging = false;
+    if (!selectedPart) return;
+    pinchStartDist = getPinchDist(e.touches);
+    pinchStartAngle = getPinchAngle(e.touches);
+    pinchStartScale = partScales[key] || 1.0;
+    pinchStartRot = partRotations[key] || 0;
+  }
+
+  function onMultiMove(e) {
+    e.preventDefault();
+    if (e.touches.length === 2 && selectedPart === key) {
+      const dist = getPinchDist(e.touches);
+      const angle = getPinchAngle(e.touches);
+      const newScale = Math.min(3, Math.max(0.2, pinchStartScale * (dist / pinchStartDist)));
+      const newRot = normalizeAngle(pinchStartRot + (angle - pinchStartAngle));
+      partScales[key] = newScale;
+      partRotations[key] = newRot;
+      applyTransform(el, key);
+      updateRotUI();
+    } else if (e.touches.length === 1) {
+      onMove(e);
+    }
+  }
   function onUp() {
     if (!dragging) return; dragging = false;
     el.style.zIndex = 10;
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup',   onUp);
-    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchmove', onMultiMove);
     document.removeEventListener('touchend',  onUp);
 
     const cfg = PARTS[key];
@@ -612,8 +711,8 @@ document.getElementById('peek-btn').addEventListener('click', () => {
 // 採点（100点満点）
 // 各パーツ最大20点：位置10点 + 回転5点 + サイズ5点
 // ================================================================
-document.getElementById('score-btn').addEventListener('click', doScore);
-function doScore() {
+document.getElementById('score-btn').addEventListener('click', () => { doScore(); });
+async function doScore() {
   let total = 0, html = '';
   PART_KEYS.forEach(key => {
     const cfg = PARTS[key];
@@ -645,6 +744,19 @@ function doScore() {
     html += `<div>${em} ${cfg.label}：${partScore}点 `
           + `<small>（位置${posScore}/10 回転${rotScore}/5 サイズ${szScore}/5）</small></div>`;
   });
+
+  // フリーハンドモード: pixel-overlapで採点
+  if (Object.keys(fhStrokes).length > 0) {
+    total = 0; html = '';
+    const fhScores = await Promise.all(FH_PART_ORDER.map(k => scoreFreehandOverlap(k)));
+    const fhLabels = {hair:'髪',reye:'左目',leye:'右目',nose:'鼻',mouth:'口'};
+    FH_PART_ORDER.forEach((key, i) => {
+      const s = fhScores[i];
+      total += s;
+      const em = s >= 18 ? '🌟' : s >= 14 ? '👍' : s >= 8 ? '😅' : '💦';
+      html += `<div>${em} ${fhLabels[key]}：${s}点 <small>（重なり度: ${Math.round(s/20*100)}%）</small></div>`;
+    });
+  }
 
   const comment = total >= 92 ? '🎉 神業！！完璧すぎる！！' :
                   total >= 75 ? '👏 すごい！かなり正確！'   :
@@ -887,7 +999,7 @@ async function renderResultCanvas() {
     FH_PART_ORDER.forEach(key => {
       const strokes = fhStrokes[key] || [];
       ctx.strokeStyle = '#111';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 22;
       ctx.lineCap = 'round';
       strokes.forEach(stroke => {
         if (stroke.length < 2) return;
@@ -898,6 +1010,64 @@ async function renderResultCanvas() {
       });
     });
   }
+}
+
+async function scoreFreehandOverlap(key) {
+  const cfg = PARTS[key];
+  const target = cfg.target;
+  const strokes = fhStrokes[key] || [];
+  if (strokes.length === 0) return 0;
+
+  // Reference canvas: draw the target part image at correct position
+  const refC = document.createElement('canvas');
+  refC.width = 460; refC.height = 500;
+  const refCtx = refC.getContext('2d');
+  const imgMatch = cfg.svgContent.match(/src="([^"]+)"/);
+  if (imgMatch) {
+    await new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        refCtx.drawImage(img, target.x - cfg.w/2, target.y - cfg.h/2, cfg.w, cfg.h);
+        res();
+      };
+      img.onerror = res;
+      img.src = imgMatch[1];
+    });
+  }
+
+  // User canvas: draw freehand strokes with thickness matching reference
+  const userC = document.createElement('canvas');
+  userC.width = 460; userC.height = 500;
+  const userCtx = userC.getContext('2d');
+  // Line width ~25% of part height to match visual thickness of reference parts
+  userCtx.lineWidth = Math.max(20, cfg.h * 0.28);
+  userCtx.strokeStyle = '#000';
+  userCtx.lineCap = 'round';
+  userCtx.lineJoin = 'round';
+  strokes.forEach(stroke => {
+    if (stroke.length < 2) return;
+    userCtx.beginPath();
+    userCtx.moveTo(stroke[0].x, stroke[0].y);
+    stroke.forEach(p => userCtx.lineTo(p.x, p.y));
+    userCtx.stroke();
+  });
+
+  // Pixel comparison (IoU)
+  const refData = refCtx.getImageData(0, 0, 460, 500).data;
+  const userDataArr = userCtx.getImageData(0, 0, 460, 500).data;
+  let refPx = 0, userPx = 0, overlap = 0;
+  for (let i = 3; i < refData.length; i += 4) {
+    const r = refData[i] > 30;
+    const u = userDataArr[i] > 30;
+    if (r) refPx++;
+    if (u) userPx++;
+    if (r && u) overlap++;
+  }
+  if (refPx === 0) return 0;
+  const union = refPx + userPx - overlap;
+  const iou = union > 0 ? overlap / union : 0;
+  // Score 0-20, use sqrt for gentler curve
+  return Math.round(20 * Math.min(1, Math.sqrt(iou * 2.5)));
 }
 
 function drawAnswerComparison() {
@@ -925,7 +1095,10 @@ function drawAnswerComparison() {
   </svg>`;
   document.getElementById('answer-comparison').innerHTML = svgHtml;
 }
-function closeScoreModal() { document.getElementById('score-modal').classList.remove('show'); }
+function closeScoreModal() {
+  document.getElementById('score-modal').classList.remove('show');
+  document.getElementById('how-to-overlay').style.display = 'flex';
+}
 
 // ================================================================
 // スコア保存
@@ -1025,7 +1198,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
     FH_PART_ORDER.forEach(key => {
       const strokes = fhStrokes[key] || [];
       ctx.strokeStyle = '#111';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 22;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       strokes.forEach(stroke => {
@@ -1096,14 +1269,28 @@ document.getElementById('reset-btn').addEventListener('click', () => {
   const pb = document.getElementById('peek-btn');
   pb.disabled = false; pb.innerHTML = '👀 チラ見する<br><small>(2秒間)</small>';
   partScales = {};
+  // Clear freehand state
+  fhStrokes = {};
+  fhPartIndex = 0;
+  freehandMode = false;
+  const rc = document.getElementById('fh-result-canvas');
+  if (rc) rc.remove();
+  document.getElementById('freehand-overlay').style.display = 'none';
+  document.querySelectorAll('.part').forEach(el => el.style.visibility = 'visible');
+  const trayEl = document.getElementById('tray');
+  if (trayEl) trayEl.style.visibility = 'visible';
+  // Reset mode buttons
+  document.getElementById('mode-place').classList.add('active');
+  document.getElementById('mode-draw').classList.remove('active');
+  // Show how-to instead of countdown on reset
+  document.getElementById('how-to-overlay').style.display = 'flex';
   initParts();
-  startCountdown();
 });
 
 // ================================================================
 // 起動
 // ================================================================
-window.addEventListener('load', () => { setTimeout(() => { initParts(); startCountdown(); }, 120); });
+window.addEventListener('load', () => { setTimeout(() => { initParts(); applyGameScale(); document.getElementById('how-to-overlay').style.display = 'flex'; }, 120); });
 </script>
 </body>
 </html>
