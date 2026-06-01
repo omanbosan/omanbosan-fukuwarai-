@@ -727,6 +727,7 @@ function startCountdown() {
         // フリーハンドモードが選択されていれば自動開始
         if (document.getElementById('mode-draw').classList.contains('active')) {
           startFreehandMode();
+          setupFhCanvas();
         }
       }, 700);
     } else { cntEl.textContent = n; }
