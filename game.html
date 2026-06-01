@@ -1076,11 +1076,48 @@ async function renderResultCanvas() {
       });
     }
   }
-  // result-imgにcanvas内容をセット（長押し保存用）
-  const resultImg = document.getElementById('result-img');
-  if (resultImg) {
-    resultImg.src = document.getElementById('result-composite').toDataURL('image/png');
+  // 保存用: 見本背景なしのcanvasを別途作成してresult-imgにセット
+  const saveCanvas = document.createElement('canvas');
+  saveCanvas.width = 460; saveCanvas.height = 500;
+  const sCtx = saveCanvas.getContext('2d');
+  // 白背景 + 輪郭
+  sCtx.fillStyle = 'white';
+  sCtx.beginPath();
+  sCtx.arc(FACE_CX, FACE_CY, FACE_R, 0, Math.PI*2);
+  sCtx.fill();
+  sCtx.strokeStyle = '#222'; sCtx.lineWidth = 4;
+  sCtx.stroke();
+  // パーツ or フリーハンド線だけ転写（見本なし）
+  if (isFreehand) {
+    const fhResultC = document.getElementById('fh-result-canvas');
+    if (fhResultC) sCtx.drawImage(fhResultC, 0, 0);
+  } else {
+    for (const key of PART_KEYS) {
+      if (!partCenters[key]) continue;
+      const cfg = PARTS[key];
+      const center = partCenters[key];
+      const angle = (partRotations[key] || 0) * Math.PI / 180;
+      const scale = partScales[key] || 1.0;
+      const imgMatch = cfg.svgContent.match(/src="([^"]+)"/);
+      if (!imgMatch) continue;
+      await new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          sCtx.save();
+          sCtx.translate(center.x, center.y);
+          sCtx.rotate(angle);
+          sCtx.scale(scale, scale);
+          sCtx.drawImage(img, -cfg.w/2, -cfg.h/2, cfg.w, cfg.h);
+          sCtx.restore();
+          resolve();
+        };
+        img.onerror = resolve;
+        img.src = imgMatch[1];
+      });
+    }
   }
+  const resultImg = document.getElementById('result-img');
+  if (resultImg) resultImg.src = saveCanvas.toDataURL('image/png');
 }
 
 async function scoreFreehandOverlap(key) {
