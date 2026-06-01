@@ -307,7 +307,6 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <div id="score-sub">/ 100点満点</div>
     <div id="score-comment"></div>
     <div id="part-breakdown"></div>
-    <div id="answer-comparison" style="margin:12px 0;"></div>
     <div id="coupon-section" style="display:none; margin:12px 0; padding:16px; background:linear-gradient(135deg,#f6d365,#fda085); border-radius:12px; text-align:center; border:3px dashed #e74c3c;">
       <div style="font-size:1.3rem; font-weight:bold; color:#c0392b;">🎉 すごい！クーポンゲット！</div>
       <div style="font-size:0.85rem; color:#7f0000; margin:6px 0;">おまんぼさんの福笑い達人認定</div>
@@ -315,8 +314,10 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <div style="font-size:0.75rem; color:#7f0000;">このコードをスクリーンショットして、おまんぼさんに見せてね！</div>
     </div>
     <canvas id="result-composite" width="460" height="500" style="display:none;"></canvas>
-    <img id="result-img" src="" alt="採点結果" style="display:block;margin:8px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
-    <p style="text-align:center;font-size:0.78rem;color:#888;margin:2px 0 6px;">📱 画像を長押しで保存できます</p>
+    <p style="text-align:center;font-size:0.8rem;font-weight:bold;color:#555;margin:8px 0 2px;">📸 見本あり（長押しで保存）</p>
+    <img id="result-img" src="" alt="採点結果（見本あり）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
+    <p style="text-align:center;font-size:0.8rem;font-weight:bold;color:#555;margin:10px 0 2px;">🖼️ 見本なし（長押しで保存）</p>
+    <img id="result-img-clean" src="" alt="採点結果（見本なし）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
     <button id="share-btn" style="display:block;margin:4px auto;padding:8px 20px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">📤 LINEやSNSでシェア</button>
     <div id="share-result" style="display:none; margin:8px auto; text-align:center; font-size:0.8rem; color:#555;"></div>
     <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#555;margin:8px 0;">
@@ -830,7 +831,6 @@ async function doScore() {
   } else {
     couponSection.style.display = 'none';
   }
-  drawAnswerComparison();
   renderResultCanvas();
   document.getElementById('score-modal').classList.add('show');
 }
@@ -1116,8 +1116,12 @@ async function renderResultCanvas() {
       });
     }
   }
+  // 見本ありは result-img へ
   const resultImg = document.getElementById('result-img');
-  if (resultImg) resultImg.src = saveCanvas.toDataURL('image/png');
+  if (resultImg) resultImg.src = document.getElementById('result-composite').toDataURL('image/png');
+  // 見本なしは result-img-clean へ
+  const resultImgClean = document.getElementById('result-img-clean');
+  if (resultImgClean) resultImgClean.src = saveCanvas.toDataURL('image/png');
 }
 
 async function scoreFreehandOverlap(key) {
