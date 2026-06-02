@@ -433,6 +433,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   </div>
   <button id="odekaki-save-btn" onclick="saveOdekakiImage()" disabled
     style="padding:10px 24px;background:#3498db;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;opacity:0.5;margin-bottom:10px;">💾 投稿＆保存する</button>
+  <!-- 生成画像（長押し保存用） -->
+  <div id="odekaki-result-wrap" style="display:none;text-align:center;margin-bottom:10px;">
+    <p style="font-size:0.78rem;color:#555;margin-bottom:4px;">📲 長押しで保存できます</p>
+    <img id="odekaki-result-img" src="" style="max-width:240px;border-radius:50%;border:3px solid #333;box-shadow:0 4px 12px rgba(0,0,0,0.15);" alt="お絵描き結果"/>
+  </div>
   <div style="background:#e8f5e9;border-radius:10px;padding:12px;max-width:320px;font-size:0.82rem;line-height:1.8;text-align:left;color:#2d5a3d;margin-bottom:10px;">
     📸 <b>インスタグラムに投稿して参加！</b><br>
     ① アカウント登録 → 「投稿＆保存する」<br>
@@ -448,6 +453,13 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 <div class="modal-bg" id="rank-modal">
   <div class="modal-box">
     <h2>🏆 ランキング</h2>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button id="rank-tab-current" onclick="switchRankTab('current')"
+        style="flex:1;padding:7px;border:2px solid #9b59b6;background:#9b59b6;color:white;border-radius:8px;cursor:pointer;font-size:0.85rem;font-weight:bold;">今月</button>
+      <button id="rank-tab-archive" onclick="switchRankTab('archive')"
+        style="flex:1;padding:7px;border:2px solid #9b59b6;background:white;color:#9b59b6;border-radius:8px;cursor:pointer;font-size:0.85rem;">先月の結果</button>
+    </div>
+    <div id="rank-note" style="font-size:0.75rem;color:#888;margin-bottom:6px;text-align:center;">毎月1日にリセット＆結果発表</div>
     <table id="ranking-table">
       <thead><tr><th>順位</th><th>名前</th><th>スコア</th><th>Instagram</th></tr></thead>
       <tbody id="ranking-tbody"></tbody>
@@ -1383,28 +1395,50 @@ async function saveScore() {
 }
 
 // ================================================================
-// ランキング（GASから取得、失敗時はローカルフォールバック）
 // ================================================================
-document.getElementById('rank-btn').addEventListener('click', showRanking);
-async function showRanking() {
+// ランキング（今月 / 先月タブ対応）
+// ================================================================
+document.getElementById('rank-btn').addEventListener('click', () => showRanking('current'));
+
+async function showRanking(tab = 'current') {
   const tbody  = document.getElementById('ranking-tbody');
   const medals = ['🥇','🥈','🥉'];
   tbody.innerHTML = '<tr><td colspan="4" style="color:#aaa;padding:12px;">読み込み中...</td></tr>';
   document.getElementById('rank-modal').classList.add('show');
+  switchRankTab(tab, false); // タブ表示のみ更新（データはこの後取得）
+
   let scores = [];
   if (WEBHOOK_URL) {
     try {
-      const res = await fetch(WEBHOOK_URL + '?type=ranking', { cache: 'no-store' });
+      const type = tab === 'archive' ? 'archive' : 'ranking';
+      const res = await fetch(WEBHOOK_URL + '?type=' + type, { cache: 'no-store' });
       if (res.ok) scores = await res.json();
     } catch(e) {}
   }
-  if (!scores.length) {
+  if (!scores.length && tab === 'current') {
     scores = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
   }
   tbody.innerHTML = scores.length ? scores.map((s,i) =>
-    `<tr><td>${medals[i]||i+1}</td><td>${esc(s.name)}</td><td>${s.score}点</td><td>${s.instagram ? '@'+esc(s.instagram) : s.date}</td></tr>`
-  ).join('') : '<tr><td colspan="4" style="color:#aaa;padding:12px;">まだ記録がありません</td></tr>';
+    `<tr><td>${medals[i]||i+1}</td><td>${esc(s.name)}</td><td>${s.score}点</td><td>${s.instagram ? '@'+esc(s.instagram) : (s.month||s.date||'')}</td></tr>`
+  ).join('') : `<tr><td colspan="4" style="color:#aaa;padding:12px;">${tab==='archive'?'先月のデータがありません':'まだ記録がありません'}</td></tr>`;
 }
+
+function switchRankTab(tab, reload = true) {
+  const cur = document.getElementById('rank-tab-current');
+  const arc = document.getElementById('rank-tab-archive');
+  const note = document.getElementById('rank-note');
+  if (tab === 'current') {
+    cur.style.background = '#9b59b6'; cur.style.color = 'white';
+    arc.style.background = 'white';   arc.style.color = '#9b59b6';
+    note.textContent = '毎月1日にリセット＆結果発表';
+  } else {
+    arc.style.background = '#9b59b6'; arc.style.color = 'white';
+    cur.style.background = 'white';   cur.style.color = '#9b59b6';
+    note.textContent = '先月のランキング確定結果';
+  }
+  if (reload) showRanking(tab);
+}
+
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ================================================================
@@ -1559,13 +1593,19 @@ async function saveOdekakiImage() {
   ctx.drawImage(canvas, 0, 0);
   const dataUrl = out.toDataURL('image/png');
 
-  // ダウンロード
+  // 長押し保存用の画像を表示
+  const resultWrap = document.getElementById('odekaki-result-wrap');
+  const resultImg  = document.getElementById('odekaki-result-img');
+  resultImg.src = dataUrl;
+  resultWrap.style.display = 'block';
+
+  // ダウンロード（PC用）
   const link = document.createElement('a');
   link.download = `omanbo_${ig}.png`;
   link.href = dataUrl;
   link.click();
 
-  // GASバックエンドへ送信（画像 + メール通知）
+  // GASバックエンドへ送信
   if (WEBHOOK_URL) {
     try {
       await fetch(WEBHOOK_URL, {
@@ -1573,13 +1613,9 @@ async function saveOdekakiImage() {
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ type: 'drawing', instagram: ig, image: dataUrl })
       });
-      alert(`💌 投稿データが届きました！\nインスタグラムに画像を投稿して\n#おまんぼさんイラスト をつけてね🌿`);
-    } catch(e) {
-      alert('画像を保存しました！インスタグラムに投稿してね📸\n#おまんぼさんイラスト');
-    }
-  } else {
-    alert('画像を保存しました！インスタグラムに投稿してね📸\n#おまんぼさんイラスト');
+    } catch(e) {}
   }
+  alert(`✅ 投稿完了！\n画像は上の丸い画像を長押しして保存できます📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね🌿`);
   btn.textContent = '💾 投稿＆保存する'; btn.disabled = false; btn.style.opacity = '1';
 }
 

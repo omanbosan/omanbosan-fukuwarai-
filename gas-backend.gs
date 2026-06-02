@@ -1,17 +1,11 @@
 // ================================================================
-// おまんぼさんイラストゲーム バックエンド
-// Google Apps Script Web App
+// おまんぼさんイラストゲーム バックエンド v1.5
 //
 // 【セットアップ手順】
-// 1. このファイルを script.google.com に貼り付け
-// 2. ownerEmail に通知先メールアドレスを入力
-// 3. 「デプロイ」→「新しいデプロイ」→ 種類: ウェブアプリ
-//    - 実行ユーザー: 自分
-//    - アクセスできるユーザー: 全員
-// 4. デプロイ後のURLをgame.htmlのWEBHOOK_URLに貼る
-// 5. 日次まとめメールのトリガーを設定:
-//    「トリガー」→「トリガーを追加」→ 関数: sendDailySummary
-//    イベントソース: 時間主導型 / 種類: 日タイマー / 時刻: 好きな時間
+// 1. このコードをすべて貼り替えて「デプロイ」→「新しいデプロイ」（毎回新しいデプロイが必要）
+//    ※URLが変わる場合はgame.htmlのWEBHOOK_URLも更新
+// 2. 日次まとめトリガー: sendDailySummary / 時間主導型 / 日タイマー
+// 3. 月次リセットトリガー: archiveMonthlyRanking / 時間主導型 / 月タイマー / 毎月1日
 // ================================================================
 
 const CONFIG = {
@@ -21,20 +15,21 @@ const CONFIG = {
 };
 
 // ----------------------------------------------------------------
-// GET: ランキング取得
+// GET
 // ----------------------------------------------------------------
 function doGet(e) {
   try {
     const type = e && e.parameter && e.parameter.type;
     if (type === 'ranking') return buildResponse(getRanking());
-    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI' });
+    if (type === 'archive') return buildResponse(getLastMonthRanking());
+    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.5' });
   } catch(err) {
     return buildResponse({ error: err.message });
   }
 }
 
 // ----------------------------------------------------------------
-// POST: スコア登録 / お絵描き投稿
+// POST
 // ----------------------------------------------------------------
 function doPost(e) {
   try {
@@ -53,10 +48,10 @@ function buildResponse(obj) {
 }
 
 // ----------------------------------------------------------------
-// ランキング上位20件を返す
+// 今月のランキング
 // ----------------------------------------------------------------
 function getRanking() {
-  const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
   const sheet = ss.getSheetByName('scores');
   if (!sheet || sheet.getLastRow() < 2) return [];
   return sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues()
@@ -67,7 +62,25 @@ function getRanking() {
 }
 
 // ----------------------------------------------------------------
-// スコアをスプレッドシートに保存
+// 先月のランキング（アーカイブから取得）
+// ----------------------------------------------------------------
+function getLastMonthRanking() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('scores_archive');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  // 最新の月ラベルを取得
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+  const latestMonth = rows[rows.length - 1][0];
+
+  return rows
+    .filter(r => r[0] === latestMonth)
+    .map(r => ({ month: r[0], name: r[2], score: Number(r[3]), instagram: r[4] || '' }))
+    .sort((a, b) => b.score - a.score);
+}
+
+// ----------------------------------------------------------------
+// スコア保存
 // ----------------------------------------------------------------
 function saveScore(data) {
   const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
@@ -87,21 +100,13 @@ function saveScore(data) {
 }
 
 // ----------------------------------------------------------------
-// お絵描きをDriveに保存（メールは日次まとめで送信）
+// お絵描き保存（シート記録→Drive保存の順で確実に残す）
 // ----------------------------------------------------------------
 function saveDrawing(data) {
   if (!data.image) return { error: 'no image data' };
-  const ig     = (data.instagram || 'anonymous').replace('@', '');
-  const base64 = data.image.replace(/^data:image\/\w+;base64,/, '');
+  const ig = (data.instagram || 'anonymous').replace('@', '');
 
-  // Google Drive に保存
-  const folder = DriveApp.getFolderById(CONFIG.driveFolderId);
-  const blob   = Utilities.newBlob(Utilities.base64Decode(base64), 'image/png', `@${ig}_${Date.now()}.png`);
-  const file   = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  const fileUrl = file.getUrl();
-
-  // drawingsシートに「未送信」ステータスで記録
+  // 1. まずシートに仮記録（Drive保存前でも記録が残るように）
   const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
   let sheet = ss.getSheetByName('drawings');
   if (!sheet) {
@@ -109,13 +114,140 @@ function saveDrawing(data) {
     sheet.appendRow(['Instagram', '投稿日時', 'ファイルURL', '送信状態']);
     sheet.setFrozenRows(1);
   }
-  sheet.appendRow([`@${ig}`, new Date().toLocaleString('ja-JP'), fileUrl, '未送信']);
+  const rowIndex = sheet.getLastRow() + 1;
+  sheet.appendRow([`@${ig}`, new Date().toLocaleString('ja-JP'), 'Drive保存中...', '未送信']);
 
-  return { ok: true, fileUrl };
+  // 2. Drive に保存
+  try {
+    const base64 = data.image.replace(/^data:image\/\w+;base64,/, '');
+    const folder = DriveApp.getFolderById(CONFIG.driveFolderId);
+    const blob   = Utilities.newBlob(
+      Utilities.base64Decode(base64), 'image/png', `@${ig}_${Date.now()}.png`
+    );
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    const fileUrl = file.getUrl();
+
+    // 3. シートのURLを更新
+    sheet.getRange(rowIndex, 3).setValue(fileUrl);
+    return { ok: true, fileUrl };
+  } catch(err) {
+    // Drive保存失敗でもシートにエラーを記録
+    sheet.getRange(rowIndex, 3).setValue('Drive保存失敗: ' + err.message);
+    sheet.getRange(rowIndex, 4).setValue('エラー');
+    return { error: err.message };
+  }
 }
 
 // ----------------------------------------------------------------
-// 動作テスト用（一度実行してDrive/Mail権限を承認する）
+// 日次まとめメール（毎日1回トリガーで実行）
+// ----------------------------------------------------------------
+function sendDailySummary() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('drawings');
+  if (!sheet || sheet.getLastRow() < 2) return;
+
+  const rows   = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues();
+  const unsent = rows
+    .map((r, i) => ({ ig: r[0], date: r[1], url: r[2], status: r[3], row: i + 2 }))
+    .filter(r => r.status === '未送信');
+
+  if (unsent.length === 0) return;
+
+  const today = new Date().toLocaleDateString('ja-JP');
+  MailApp.sendEmail({
+    to: CONFIG.ownerEmail,
+    subject: `【おまんぼさんイラスト】${today} の投稿まとめ（${unsent.length}件）`,
+    htmlBody: `
+      <h2 style="color:#27ae60;">🎨 お絵描き投稿 日次まとめ【${today}】</h2>
+      <p>本日の新着：<strong>${unsent.length}件</strong></p>
+      <table style="border-collapse:collapse;width:100%;">
+        <tr style="background:#27ae60;color:white;">
+          <th style="padding:8px;">Instagram</th>
+          <th style="padding:8px;">投稿日時</th>
+          <th style="padding:8px;">画像</th>
+        </tr>
+        ${unsent.map((r, i) => `
+          <tr style="background:${i%2===0?'#f9f9f9':'white'};">
+            <td style="padding:8px;">${r.ig}</td>
+            <td style="padding:8px;">${r.date}</td>
+            <td style="padding:8px;"><a href="${r.url}">画像を見る</a></td>
+          </tr>
+        `).join('')}
+      </table>
+      <p><a href="https://drive.google.com/drive/folders/${CONFIG.driveFolderId}"
+         style="background:#3498db;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;">
+        ▶ Driveフォルダをまとめて確認
+      </a></p>
+    `
+  });
+
+  unsent.forEach(r => sheet.getRange(r.row, 4).setValue('送信済み'));
+}
+
+// ----------------------------------------------------------------
+// 月次ランキングアーカイブ（毎月1日トリガーで実行）
+// ----------------------------------------------------------------
+function archiveMonthlyRanking() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('scores');
+  if (!sheet || sheet.getLastRow() < 2) return;
+
+  const lastMonth = new Date();
+  lastMonth.setMonth(lastMonth.getMonth() - 1);
+  const label = `${lastMonth.getFullYear()}年${lastMonth.getMonth() + 1}月`;
+
+  // アーカイブシートに保存
+  let archSheet = ss.getSheetByName('scores_archive');
+  if (!archSheet) {
+    archSheet = ss.insertSheet('scores_archive');
+    archSheet.appendRow(['月', '順位', '名前', 'スコア', 'Instagram']);
+    archSheet.setFrozenRows(1);
+  }
+
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues()
+    .map(r => ({ name: r[0], score: Number(r[1]), instagram: r[3] || '' }))
+    .filter(r => r.name && r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+
+  rows.forEach((r, i) => {
+    archSheet.appendRow([label, i + 1, r.name, r.score, r.instagram]);
+  });
+
+  // 先月結果をメールで送信
+  const medals = ['🥇', '🥈', '🥉'];
+  MailApp.sendEmail({
+    to: CONFIG.ownerEmail,
+    subject: `【${label} ランキング確定】おまんぼさんイラストゲーム`,
+    htmlBody: `
+      <h2>🏆 ${label} ランキング確定結果</h2>
+      <table style="border-collapse:collapse;width:100%;">
+        <tr style="background:#9b59b6;color:white;">
+          <th style="padding:8px;">順位</th><th style="padding:8px;">名前</th>
+          <th style="padding:8px;">スコア</th><th style="padding:8px;">Instagram</th>
+        </tr>
+        ${rows.map((r, i) => `
+          <tr style="background:${i%2===0?'#f9f9f9':'white'};">
+            <td style="padding:8px;text-align:center;">${medals[i] || i+1}</td>
+            <td style="padding:8px;">${r.name}</td>
+            <td style="padding:8px;text-align:center;">${r.score}点</td>
+            <td style="padding:8px;">${r.instagram ? '@'+r.instagram : '-'}</td>
+          </tr>
+        `).join('')}
+      </table>
+      <p style="color:#888;">※ ランキングは本日リセットされました</p>
+    `
+  });
+
+  // scoresシートをクリア（ヘッダー以外）
+  if (sheet.getLastRow() > 1) {
+    sheet.deleteRows(2, sheet.getLastRow() - 1);
+  }
+}
+
+// ----------------------------------------------------------------
+// 動作テスト用
 // ----------------------------------------------------------------
 function testDrive() {
   const folder = DriveApp.getFolderById(CONFIG.driveFolderId);
@@ -130,58 +262,4 @@ function testMail() {
     body: 'GASのメール送信テストです。このメールが届いていれば設定完了です！'
   });
   Logger.log('✅ メール送信OK');
-}
-
-// ----------------------------------------------------------------
-// 日次まとめメール（毎日1回トリガーで実行）
-// ----------------------------------------------------------------
-function sendDailySummary() {
-  const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
-  const sheet = ss.getSheetByName('drawings');
-  if (!sheet || sheet.getLastRow() < 2) return;
-
-  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues();
-
-  // 「未送信」の行だけ抽出
-  const unsent = rows
-    .map((r, i) => ({ ig: r[0], date: r[1], url: r[2], status: r[3], row: i + 2 }))
-    .filter(r => r.status === '未送信');
-
-  if (unsent.length === 0) return; // 新着なければ何もしない
-
-  // まとめメール本文を作成
-  const today = new Date().toLocaleDateString('ja-JP');
-  let html = `
-    <h2 style="color:#27ae60;">🎨 お絵描き投稿 日次まとめ【${today}】</h2>
-    <p>本日の新着投稿：<strong>${unsent.length}件</strong></p>
-    <table style="border-collapse:collapse;width:100%;">
-      <tr style="background:#27ae60;color:white;">
-        <th style="padding:8px 12px;">Instagram</th>
-        <th style="padding:8px 12px;">投稿日時</th>
-        <th style="padding:8px 12px;">画像</th>
-      </tr>
-      ${unsent.map((r, i) => `
-        <tr style="background:${i%2===0?'#f9f9f9':'white'};">
-          <td style="padding:8px 12px;">${r.ig}</td>
-          <td style="padding:8px 12px;">${r.date}</td>
-          <td style="padding:8px 12px;"><a href="${r.url}">画像を見る</a></td>
-        </tr>
-      `).join('')}
-    </table>
-    <p style="margin-top:16px;">
-      <a href="https://drive.google.com/drive/folders/${CONFIG.driveFolderId}"
-         style="background:#3498db;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;">
-        ▶ Driveフォルダをまとめて確認
-      </a>
-    </p>
-  `;
-
-  MailApp.sendEmail({
-    to: CONFIG.ownerEmail,
-    subject: `【おまんぼさんイラスト】${today} の投稿まとめ（${unsent.length}件）`,
-    htmlBody: html
-  });
-
-  // 送信済みに更新
-  unsent.forEach(r => sheet.getRange(r.row, 4).setValue('送信済み'));
 }
