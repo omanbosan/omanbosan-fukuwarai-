@@ -101,6 +101,16 @@ function saveScore(data) {
 }
 
 // ----------------------------------------------------------------
+// DriveのURLをサムネイル表示用URLに変換
+// ----------------------------------------------------------------
+function driveUrlToThumb(url) {
+  if (!url || !url.startsWith('http')) return '';
+  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w300';
+  return '';
+}
+
+// ----------------------------------------------------------------
 // 図鑑取得
 // ----------------------------------------------------------------
 function getZukan() {
@@ -113,7 +123,7 @@ function getZukan() {
       no:          i + 1,
       instagram:   (r[0] || '').replace('@', ''),
       date:        r[1] ? String(r[1]).slice(0, 10) : '',
-      imageUrl:    r[2] && r[2].startsWith('http') ? r[2] : '',
+      imageUrl:    driveUrlToThumb(r[2]),
       villageName: r[4] || '',
       comment:     r[5] || ''
     }))
