@@ -126,11 +126,11 @@ function getZukan() {
 // ----------------------------------------------------------------
 function saveDrawing(data) {
   if (!data.image) return { error: 'no image data' };
-  const ig          = (data.instagram   || 'anonymous').replace('@', '');
-  const villageName = (data.villageName || '').slice(0, 10);
-  const comment     = (data.comment     || '').slice(0, 20);
+  const ig          = String(data.instagram   || 'anonymous').replace('@', '');
+  const villageName = String(data.villageName || '').slice(0, 10);
+  const comment     = String(data.comment     || '').slice(0, 20);
 
-  // 1. まずシートに仮記録（Drive保存前でも記録が残るように）
+  // 1. シートに仮記録（Drive保存前でも記録が残るように）
   const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
   let sheet = ss.getSheetByName('drawings');
   if (!sheet) {
@@ -138,16 +138,23 @@ function saveDrawing(data) {
     sheet.appendRow(['Instagram', '投稿日時', 'ファイルURL', '送信状態', '村人名', 'ひとこと', '図鑑No']);
     sheet.setFrozenRows(1);
   }
-  // 既存シートにヘッダー列が足りない場合は追加
-  if (sheet.getLastColumn() < 7) {
-    const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    if (!header[4]) sheet.getRange(1, 5).setValue('村人名');
-    if (!header[5]) sheet.getRange(1, 6).setValue('ひとこと');
-    if (!header[6]) sheet.getRange(1, 7).setValue('図鑑No');
-  }
-  const zukanNo  = sheet.getLastRow(); // ヘッダー行を含むので = 図鑑No
+  // ヘッダー列が4列以下の場合は拡張
+  const colCount = sheet.getLastColumn();
+  if (colCount < 5) sheet.getRange(1, 5).setValue('村人名');
+  if (colCount < 6) sheet.getRange(1, 6).setValue('ひとこと');
+  if (colCount < 7) sheet.getRange(1, 7).setValue('図鑑No');
+
+  const zukanNo  = Math.max(sheet.getLastRow(), 1); // 図鑑No（1始まり）
   const rowIndex = sheet.getLastRow() + 1;
-  sheet.appendRow([`@${ig}`, new Date().toLocaleString('ja-JP'), 'Drive保存中...', '未送信', villageName, comment, zukanNo]);
+  sheet.appendRow([
+    '@' + ig,
+    new Date().toLocaleString('ja-JP'),
+    'Drive保存中...',
+    '未送信',
+    villageName,
+    comment,
+    zukanNo
+  ]);
 
   // 2. Drive に保存
   try {
