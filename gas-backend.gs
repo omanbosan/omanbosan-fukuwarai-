@@ -115,6 +115,24 @@ function saveDrawing(data) {
 }
 
 // ----------------------------------------------------------------
+// 動作テスト用（一度実行してDrive/Mail権限を承認する）
+// ----------------------------------------------------------------
+function testDrive() {
+  const folder = DriveApp.getFolderById(CONFIG.driveFolderId);
+  Logger.log('フォルダ名: ' + folder.getName());
+  Logger.log('✅ Drive接続OK');
+}
+
+function testMail() {
+  MailApp.sendEmail({
+    to: CONFIG.ownerEmail,
+    subject: '【テスト】おまんぼさんイラストゲーム GAS接続確認',
+    body: 'GASのメール送信テストです。このメールが届いていれば設定完了です！'
+  });
+  Logger.log('✅ メール送信OK');
+}
+
+// ----------------------------------------------------------------
 // 日次まとめメール（毎日1回トリガーで実行）
 // ----------------------------------------------------------------
 function sendDailySummary() {
