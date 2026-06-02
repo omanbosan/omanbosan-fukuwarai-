@@ -290,42 +290,115 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 
   <div style="background:rgba(39,174,96,0.2);border:1px solid rgba(39,174,96,0.5);border-radius:12px;padding:14px;margin-bottom:16px;width:100%;text-align:left;">
     <div style="font-size:1rem;font-weight:bold;color:#2ecc71;margin-bottom:6px;">② お絵描きチャレンジ 🖌️</div>
-    <div style="font-size:0.82rem;line-height:1.7;margin-bottom:8px;">
-      おまんぼさんの顔を自由に描いてインスタに投稿！<br>
-      みんなの絵でアート作品を作ります🌳
+    <div style="font-size:0.85rem;line-height:1.8;margin-bottom:10px;">
+      おまんぼさんの顔を自由に描いて<b>村人として図鑑に登録</b>しよう！<br>
+      描いた顔に名前をつけると、あなたオリジナルの村人が誕生。<br>
+      村にはいろんな顔が増えていく…その中に<b>本物のおまんぼさん</b>が隠れているかも？🔍
     </div>
-    <svg width="100%" viewBox="0 0 280 155" style="display:block;border-radius:10px;background:#1a3a2a;">
-      <text x="140" y="14" text-anchor="middle" font-size="10" fill="#81c784" font-weight="bold" font-family="sans-serif">みんなの絵でつくる大きなアート</text>
-      <circle cx="38" cy="73" r="26" fill="white" stroke="#f39c12" stroke-width="2"/>
-      <circle cx="30" cy="68" r="3" fill="#444"/><circle cx="46" cy="68" r="3" fill="#444"/>
-      <path d="M30,80 Q38,88 46,80" stroke="#444" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <text x="38" y="112" text-anchor="middle" font-size="8" fill="#aaa" font-family="sans-serif">あなたの絵</text>
-      <line x1="70" y1="73" x2="90" y2="73" stroke="#aaa" stroke-width="1.5"/>
-      <polygon points="90,68 100,73 90,78" fill="#aaa"/>
-      <text x="85" y="67" text-anchor="middle" font-size="7" fill="#aaa" font-family="sans-serif">集まると</text>
-      <rect x="152" y="108" width="15" height="33" fill="#795548" rx="3"/>
-      <ellipse cx="159" cy="142" rx="38" ry="7" fill="#2e5e2e"/>
-      <circle cx="159" cy="45" r="16" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
-      <circle cx="152" cy="41" r="2" fill="#444"/><circle cx="163" cy="41" r="2" fill="#444"/>
-      <path d="M152,50 Q159,56 166,50" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <circle cx="133" cy="72" r="14" fill="#ffccbc" stroke="#e64a19" stroke-width="1.5"/>
-      <circle cx="127" cy="68" r="2" fill="#444"/><circle cx="137" cy="68" r="2" fill="#444"/>
-      <path d="M127,76 Q133,82 139,76" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <circle cx="185" cy="70" r="14" fill="#c8e6c9" stroke="#388e3c" stroke-width="1.5"/>
-      <circle cx="179" cy="66" r="2" fill="#444"/><circle cx="189" cy="66" r="2" fill="#444"/>
-      <path d="M179,74 Q185,80 191,74" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <circle cx="136" cy="98" r="13" fill="#e1bee7" stroke="#7b1fa2" stroke-width="1.5"/>
-      <circle cx="130" cy="94" r="2" fill="#444"/><circle cx="140" cy="94" r="2" fill="#444"/>
-      <path d="M130,102 Q136,107 142,102" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <circle cx="182" cy="97" r="13" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
-      <circle cx="176" cy="93" r="2" fill="#444"/><circle cx="186" cy="93" r="2" fill="#444"/>
-      <path d="M176,101 Q182,106 188,101" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <circle cx="159" cy="97" r="13" fill="#ffe0b2" stroke="#e65100" stroke-width="1.5"/>
-      <circle cx="153" cy="93" r="2" fill="#444"/><circle cx="163" cy="93" r="2" fill="#444"/>
-      <path d="M153,101 Q159,106 165,101" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <text x="159" y="151" text-anchor="middle" font-size="8" fill="#81c784" font-family="sans-serif">参加者全員で大きな作品を作ろう！</text>
+
+    <!-- フロー図 -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:10px;flex-wrap:wrap;">
+      <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#fff;line-height:1.5;min-width:58px;">
+        🎨<br>顔を描く
+      </div>
+      <div style="color:#aaa;font-size:1rem;">→</div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#fff;line-height:1.5;min-width:58px;">
+        🏷️<br>名前をつける
+      </div>
+      <div style="color:#aaa;font-size:1rem;">→</div>
+      <div style="background:rgba(230,126,34,0.4);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#ffe;line-height:1.5;min-width:58px;">
+        📖<br>図鑑に登録
+      </div>
+      <div style="color:#aaa;font-size:1rem;">→</div>
+      <div style="background:rgba(39,174,96,0.4);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#dfd;line-height:1.5;min-width:58px;">
+        🏘️<br>村の住人に！
+      </div>
+    </div>
+
+    <!-- 村のイメージ図 -->
+    <svg width="100%" viewBox="0 0 280 175" style="display:block;border-radius:10px;background:#e8f4e8;">
+
+      <!-- 空・背景 -->
+      <rect x="0" y="0" width="280" height="175" fill="#d4edda" rx="10"/>
+      <rect x="0" y="110" width="280" height="65" fill="#8fbc6f" rx="0"/>
+      <rect x="0" y="155" width="280" height="20" fill="#6a9e4a"/>
+      <!-- 道 -->
+      <rect x="80" y="112" width="120" height="8" fill="#c9b99a" rx="2"/>
+      <rect x="90" y="116" width="10" height="2" fill="#e0d0b0"/>
+      <rect x="108" y="116" width="10" height="2" fill="#e0d0b0"/>
+      <rect x="126" y="116" width="10" height="2" fill="#e0d0b0"/>
+      <rect x="144" y="116" width="10" height="2" fill="#e0d0b0"/>
+      <rect x="162" y="116" width="10" height="2" fill="#e0d0b0"/>
+
+      <!-- 建物1（左） -->
+      <rect x="10" y="75" width="45" height="40" fill="#f5deb3" stroke="#888" stroke-width="1"/>
+      <polygon points="10,75 32,55 55,75" fill="#c0392b"/>
+      <rect x="25" y="90" width="14" height="25" fill="#8B6914"/>
+      <rect x="15" y="80" width="10" height="10" fill="#aee8f8" stroke="#888" stroke-width="0.5"/>
+      <rect x="35" y="80" width="10" height="10" fill="#aee8f8" stroke="#888" stroke-width="0.5"/>
+
+      <!-- 建物2（右） -->
+      <rect x="225" y="80" width="50" height="35" fill="#fdebd0" stroke="#888" stroke-width="1"/>
+      <polygon points="225,80 250,62 275,80" fill="#e67e22"/>
+      <rect x="241" y="93" width="18" height="22" fill="#8B6914"/>
+      <rect x="228" y="85" width="10" height="10" fill="#aee8f8" stroke="#888" stroke-width="0.5"/>
+      <rect x="257" y="85" width="10" height="10" fill="#aee8f8" stroke="#888" stroke-width="0.5"/>
+
+      <!-- 木 -->
+      <rect x="70" y="98" width="5" height="20" fill="#795548"/>
+      <circle cx="72" cy="90" r="14" fill="#27ae60"/>
+      <rect x="200" y="100" width="5" height="18" fill="#795548"/>
+      <circle cx="202" cy="92" r="12" fill="#2ecc71"/>
+
+      <!-- タイトル -->
+      <text x="140" y="18" text-anchor="middle" font-size="10" fill="#2d6a2d" font-weight="bold" font-family="sans-serif">おまんぼさん村</text>
+
+      <!-- 村人たち（顔） -->
+      <!-- 村人A ピンク -->
+      <circle cx="100" cy="100" r="13" fill="#ffccbc" stroke="#e64a19" stroke-width="1.5"/>
+      <circle cx="95" cy="96" r="2.2" fill="#333"/><circle cx="105" cy="96" r="2.2" fill="#333"/>
+      <path d="M95,105 Q100,110 105,105" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="88" y="113" width="24" height="9" fill="white" rx="3" opacity="0.85"/>
+      <text x="100" y="120" text-anchor="middle" font-size="6" fill="#c0392b" font-weight="bold" font-family="sans-serif">もじゃ太</text>
+
+      <!-- 村人B 青 -->
+      <circle cx="140" cy="98" r="13" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
+      <circle cx="135" cy="94" r="2.2" fill="#333"/><circle cx="145" cy="94" r="2.2" fill="#333"/>
+      <path d="M135,103 Q140,108 145,103" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <rect x="128" y="111" width="24" height="9" fill="white" rx="3" opacity="0.85"/>
+      <text x="140" y="118" text-anchor="middle" font-size="6" fill="#0288d1" font-weight="bold" font-family="sans-serif">くるり子</text>
+
+      <!-- 村人C 紫（本物？） ★光る★ -->
+      <circle cx="180" cy="96" r="15" fill="#fffde7" stroke="#f39c12" stroke-width="2.5"/>
+      <circle cx="174" cy="91" r="2.5" fill="#222"/><circle cx="186" cy="91" r="2.5" fill="#222"/>
+      <path d="M174,101 Q180,107 186,101" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- キラキラ -->
+      <text x="196" y="84" font-size="9" fill="#f39c12" font-family="sans-serif">✨</text>
+      <rect x="168" y="111" width="30" height="10" fill="#f39c12" rx="3" opacity="0.95"/>
+      <text x="183" y="119" text-anchor="middle" font-size="6.5" fill="white" font-weight="bold" font-family="sans-serif">本物？🔍</text>
+
+      <!-- 村人D 緑（小さい・後ろ） -->
+      <circle cx="118" cy="104" r="10" fill="#c8e6c9" stroke="#388e3c" stroke-width="1.2"/>
+      <circle cx="114" cy="101" r="1.8" fill="#333"/><circle cx="122" cy="101" r="1.8" fill="#333"/>
+      <path d="M114,108 Q118,112 122,108" stroke="#333" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+      <!-- 村人E オレンジ（小さい・後ろ） -->
+      <circle cx="158" cy="105" r="10" fill="#ffe0b2" stroke="#e65100" stroke-width="1.2"/>
+      <circle cx="154" cy="102" r="1.8" fill="#333"/><circle cx="162" cy="102" r="1.8" fill="#333"/>
+      <path d="M154,109 Q158,113 162,109" stroke="#333" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+      <!-- あなたの絵が加わる演出 -->
+      <circle cx="38" cy="38" r="18" fill="white" stroke="#27ae60" stroke-width="2" stroke-dasharray="4,3"/>
+      <text x="38" y="33" text-anchor="middle" font-size="14" font-family="sans-serif">🎨</text>
+      <text x="38" y="48" text-anchor="middle" font-size="7" fill="#27ae60" font-family="sans-serif">あなたの</text>
+      <text x="38" y="57" text-anchor="middle" font-size="7" fill="#27ae60" font-family="sans-serif">村人！</text>
+      <line x1="57" y1="48" x2="78" y2="75" stroke="#27ae60" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <polygon points="78,75 72,68 84,67" fill="#27ae60"/>
+
+      <!-- 下キャプション -->
+      <text x="140" y="170" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold" font-family="sans-serif">村人が増えるほど本物が見つけにくくなる！</text>
     </svg>
-    <div style="font-size:0.75rem;color:#aaa;margin-top:6px;">投票数の多い顔で商品化も検討中✨</div>
+    <div style="font-size:0.75rem;color:#aaa;margin-top:6px;">人気の村人は商品化も検討中✨ / 定期的に「本物を探せ！」クイズ開催予定🔍</div>
   </div>
 
   <div style="display:flex;gap:12px;width:100%;margin-bottom:10px;">
