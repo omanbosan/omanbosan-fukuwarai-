@@ -264,6 +264,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button class="ctrl-btn btn-reset" id="reset-btn">🔄 描き直す</button>
     <button class="ctrl-btn" id="home-btn" style="background:#7f8c8d;color:white;">🏠 トップへ戻る</button>
     <button class="ctrl-btn btn-rank"  id="rank-btn">🏆 ランキング</button>
+    <button class="ctrl-btn" id="zukan-btn" style="background:#e67e22;color:white;" onclick="openZukan()">📖 図鑑</button>
     <div id="placed-status">配置状況：</div>
   </div>
 </div>
@@ -327,14 +328,17 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <div style="font-size:0.75rem;color:#aaa;margin-top:6px;">投票数の多い顔で商品化も検討中✨</div>
   </div>
 
-  <div style="display:flex;gap:12px;width:100%;">
+  <div style="display:flex;gap:12px;width:100%;margin-bottom:10px;">
     <button onclick="selectModeAndStart('scoring')" style="flex:1;padding:16px 8px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;line-height:1.5;">
       🎯 採点チャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">スコアを競おう！</span>
     </button>
     <button onclick="selectModeAndStart('drawing')" style="flex:1;padding:16px 8px;background:#27ae60;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;line-height:1.5;">
-      🎨 お絵描きチャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">自由に描いてシェア！</span>
+      🎨 お絵描きチャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">村人になろう！</span>
     </button>
   </div>
+  <button onclick="openZukan()" style="width:100%;padding:13px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;">
+    📖 おまんぼさん図鑑を見る<br><span style="font-size:0.72rem;font-weight:normal;">みんなの村人たちに会いに行こう</span>
+  </button>
 </div>
 
 <!-- 開始オーバーレイ -->
@@ -422,10 +426,20 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;">
     <button onclick="clearOdekakiCanvas()" style="padding:8px 14px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">🗑 全消し</button>
   </div>
-  <!-- Instagram必須登録 -->
+  <!-- 図鑑登録フォーム -->
   <div style="background:white;border:2px solid #27ae60;border-radius:10px;padding:14px;max-width:300px;width:100%;margin-bottom:10px;">
-    <div style="font-size:0.85rem;font-weight:bold;color:#27ae60;margin-bottom:8px;">📋 参加登録（必須）</div>
-    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">Instagramアカウント名（@なしでOK）</div>
+    <div style="font-size:0.85rem;font-weight:bold;color:#27ae60;margin-bottom:8px;">📖 図鑑に登録する（必須）</div>
+
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">🏷️ この村人の名前（必須・最大10文字）</div>
+    <input type="text" id="odekaki-name" placeholder="例: もじゃおまんぼ" maxlength="10"
+      style="width:100%;padding:8px;border:2px solid #e67e22;border-radius:6px;font-size:0.95rem;margin-bottom:8px;box-sizing:border-box;font-weight:bold;"
+      oninput="updateOdekakiSubmitBtn()">
+
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">💬 この村人のひとこと（任意・最大20文字）</div>
+    <input type="text" id="odekaki-comment" placeholder="例: 眉毛が自慢" maxlength="20"
+      style="width:100%;padding:8px;border:2px solid #ddd;border-radius:6px;font-size:0.9rem;margin-bottom:10px;box-sizing:border-box;">
+
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">📸 Instagramアカウント名（@なしでOK）</div>
     <input type="text" id="odekaki-instagram" placeholder="例: omanbo_taro"
       style="width:100%;padding:8px;border:2px solid #27ae60;border-radius:6px;font-size:0.9rem;margin-bottom:8px;box-sizing:border-box;"
       oninput="updateOdekakiSubmitBtn()">
@@ -442,14 +456,27 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <img id="odekaki-result-img" src="" style="max-width:240px;border-radius:50%;border:3px solid #333;box-shadow:0 4px 12px rgba(0,0,0,0.15);" alt="お絵描き結果"/>
   </div>
   <div style="background:#e8f5e9;border-radius:10px;padding:12px;max-width:320px;font-size:0.82rem;line-height:1.8;text-align:left;color:#2d5a3d;margin-bottom:10px;">
-    📸 <b>インスタグラムに投稿して参加！</b><br>
-    ① アカウント登録 → 「投稿＆保存する」<br>
-    ② 保存された画像をインスタグラムに投稿<br>
-    ③ <b>#おまんぼさんイラスト</b> をつけてね🌿<br>
-    🌳 みんなの絵でアート作品を作ります！<br>
-    <span style="color:#888;font-size:0.75rem;">投票数の多い顔で商品化も検討中✨</span>
+    📖 <b>あなたの絵が図鑑に載る！</b><br>
+    ① 絵を描いて村人名をつける<br>
+    ② 「投稿＆図鑑登録する」を押す<br>
+    ③ <b>#おまんぼさんイラスト</b> でインスタに投稿🌿<br>
+    🔍 村に紛れた本物のおまんぼさんを探せ！<br>
+    <span style="color:#888;font-size:0.75rem;">人気の村人は商品化も検討中✨</span>
   </div>
+  <button onclick="openZukan()" style="padding:10px 24px;background:#e67e22;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;margin-bottom:8px;">📖 図鑑を見る</button>
   <button onclick="closeOdekakiOverlay()" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">← 戻る</button>
+</div>
+
+<!-- 図鑑モーダル -->
+<div class="modal-bg" id="zukan-modal">
+  <div class="modal-box" style="max-width:480px;">
+    <h2 style="color:#e67e22;">📖 おまんぼさん図鑑</h2>
+    <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">みんなが生み出した村人たち</p>
+    <div id="zukan-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
+    <div id="zukan-loading" style="text-align:center;padding:20px;color:#888;font-size:0.9rem;">読み込み中...</div>
+    <div id="zukan-empty" style="display:none;text-align:center;padding:20px;color:#aaa;font-size:0.85rem;">まだ村人がいません。<br>最初の村人になろう！</div>
+    <button onclick="document.getElementById('zukan-modal').classList.remove('show')" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">閉じる</button>
+  </div>
 </div>
 
 <!-- ランキングモーダル -->
@@ -1576,24 +1603,27 @@ function clearOdekakiCanvas() {
 }
 
 function updateOdekakiSubmitBtn() {
+  const name    = (document.getElementById('odekaki-name').value || '').trim();
   const ig      = (document.getElementById('odekaki-instagram').value || '').trim();
   const checked = document.getElementById('odekaki-follow-check').checked;
   const btn     = document.getElementById('odekaki-save-btn');
-  const ok = ig.length > 0 && checked;
+  const ok = name.length > 0 && ig.length > 0 && checked;
   btn.disabled = !ok;
   btn.style.opacity = ok ? '1' : '0.5';
   btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
 }
 
 async function saveOdekakiImage() {
-  const ig  = (document.getElementById('odekaki-instagram').value || '').trim().replace('@','');
-  const followed = document.getElementById('odekaki-follow-check').checked;
-  if (!ig || !followed) {
-    alert('Instagramアカウント名を入力して、フォロー確認にチェックしてください');
+  const villageName = (document.getElementById('odekaki-name').value || '').trim();
+  const comment     = (document.getElementById('odekaki-comment').value || '').trim();
+  const ig          = (document.getElementById('odekaki-instagram').value || '').trim().replace('@','');
+  const followed    = document.getElementById('odekaki-follow-check').checked;
+  if (!villageName || !ig || !followed) {
+    alert('村人名・Instagramアカウント・フォロー確認をすべて入力してください');
     return;
   }
   const btn = document.getElementById('odekaki-save-btn');
-  btn.textContent = '送信中...'; btn.disabled = true;
+  btn.textContent = '図鑑に登録中...'; btn.disabled = true;
 
   const canvas = document.getElementById('odekaki-canvas');
   const out = document.createElement('canvas');
@@ -1614,7 +1644,7 @@ async function saveOdekakiImage() {
 
   // ダウンロード（PC用）
   const link = document.createElement('a');
-  link.download = `omanbo_${ig}.png`;
+  link.download = `omanbo_${villageName}.png`;
   link.href = dataUrl;
   link.click();
 
@@ -1624,12 +1654,59 @@ async function saveOdekakiImage() {
       await fetch(WEBHOOK_URL, {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ type: 'drawing', instagram: ig, image: dataUrl })
+        body: JSON.stringify({
+          type: 'drawing',
+          instagram: ig,
+          villageName: villageName,
+          comment: comment,
+          image: dataUrl
+        })
       });
     } catch(e) {}
   }
-  alert(`✅ 投稿完了！\n画像は上の丸い画像を長押しして保存できます📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね🌿`);
-  btn.textContent = '💾 投稿＆保存する'; btn.disabled = false; btn.style.opacity = '1';
+  alert(`✅ 図鑑に登録完了！\n「${villageName}」が村人になりました🎉\n\n画像は上の丸い画像を長押しして保存📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね🌿`);
+  btn.textContent = '💾 投稿＆図鑑登録する'; btn.disabled = false; btn.style.opacity = '1';
+}
+
+// ================================================================
+// 図鑑
+// ================================================================
+async function openZukan() {
+  document.getElementById('zukan-modal').classList.add('show');
+  const list    = document.getElementById('zukan-list');
+  const loading = document.getElementById('zukan-loading');
+  const empty   = document.getElementById('zukan-empty');
+  list.innerHTML = '';
+  loading.style.display = 'block';
+  empty.style.display = 'none';
+
+  try {
+    const res  = await fetch(WEBHOOK_URL + '?type=zukan');
+    const data = await res.json();
+    loading.style.display = 'none';
+    if (!data || data.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    data.forEach(entry => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background:#fffbf0;border:2px solid #f39c12;border-radius:10px;padding:10px;text-align:center;';
+      card.innerHTML = `
+        <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">No.${String(entry.no).padStart(3,'0')}</div>
+        ${entry.imageUrl
+          ? `<img src="${entry.imageUrl}" style="width:80px;height:80px;border-radius:50%;border:2px solid #333;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
+          : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎨</div>`
+        }
+        <div style="font-size:0.95rem;font-weight:bold;color:#c0392b;margin-bottom:3px;">${entry.villageName}</div>
+        ${entry.comment ? `<div style="font-size:0.75rem;color:#666;margin-bottom:3px;">「${entry.comment}」</div>` : ''}
+        <div style="font-size:0.7rem;color:#aaa;">@${entry.instagram}</div>
+        <div style="font-size:0.65rem;color:#bbb;">${entry.date}</div>
+      `;
+      list.appendChild(card);
+    });
+  } catch(e) {
+    loading.textContent = '読み込みに失敗しました';
+  }
 }
 
 function closeOdekakiOverlay() {

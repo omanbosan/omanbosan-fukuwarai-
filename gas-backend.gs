@@ -1,5 +1,5 @@
 // ================================================================
-// おまんぼさんイラストゲーム バックエンド v1.5
+// おまんぼさんイラストゲーム バックエンド v1.6
 //
 // 【セットアップ手順】
 // 1. このコードをすべて貼り替えて「デプロイ」→「新しいデプロイ」（毎回新しいデプロイが必要）
@@ -22,7 +22,8 @@ function doGet(e) {
     const type = e && e.parameter && e.parameter.type;
     if (type === 'ranking') return buildResponse(getRanking());
     if (type === 'archive') return buildResponse(getLastMonthRanking());
-    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.5' });
+    if (type === 'zukan')   return buildResponse(getZukan());
+    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.6' });
   } catch(err) {
     return buildResponse({ error: err.message });
   }
@@ -100,22 +101,53 @@ function saveScore(data) {
 }
 
 // ----------------------------------------------------------------
+// 図鑑取得
+// ----------------------------------------------------------------
+function getZukan() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('drawings');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
+    .map((r, i) => ({
+      no:          i + 1,
+      instagram:   (r[0] || '').replace('@', ''),
+      date:        r[1] ? String(r[1]).slice(0, 10) : '',
+      imageUrl:    r[2] && r[2].startsWith('http') ? r[2] : '',
+      villageName: r[4] || '',
+      comment:     r[5] || ''
+    }))
+    .filter(r => r.villageName)
+    .reverse(); // 新しい順
+}
+
+// ----------------------------------------------------------------
 // お絵描き保存（シート記録→Drive保存の順で確実に残す）
 // ----------------------------------------------------------------
 function saveDrawing(data) {
   if (!data.image) return { error: 'no image data' };
-  const ig = (data.instagram || 'anonymous').replace('@', '');
+  const ig          = (data.instagram   || 'anonymous').replace('@', '');
+  const villageName = (data.villageName || '').slice(0, 10);
+  const comment     = (data.comment     || '').slice(0, 20);
 
   // 1. まずシートに仮記録（Drive保存前でも記録が残るように）
   const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
   let sheet = ss.getSheetByName('drawings');
   if (!sheet) {
     sheet = ss.insertSheet('drawings');
-    sheet.appendRow(['Instagram', '投稿日時', 'ファイルURL', '送信状態']);
+    sheet.appendRow(['Instagram', '投稿日時', 'ファイルURL', '送信状態', '村人名', 'ひとこと', '図鑑No']);
     sheet.setFrozenRows(1);
   }
+  // 既存シートにヘッダー列が足りない場合は追加
+  if (sheet.getLastColumn() < 7) {
+    const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    if (!header[4]) sheet.getRange(1, 5).setValue('村人名');
+    if (!header[5]) sheet.getRange(1, 6).setValue('ひとこと');
+    if (!header[6]) sheet.getRange(1, 7).setValue('図鑑No');
+  }
+  const zukanNo  = sheet.getLastRow(); // ヘッダー行を含むので = 図鑑No
   const rowIndex = sheet.getLastRow() + 1;
-  sheet.appendRow([`@${ig}`, new Date().toLocaleString('ja-JP'), 'Drive保存中...', '未送信']);
+  sheet.appendRow([`@${ig}`, new Date().toLocaleString('ja-JP'), 'Drive保存中...', '未送信', villageName, comment, zukanNo]);
 
   // 2. Drive に保存
   try {
