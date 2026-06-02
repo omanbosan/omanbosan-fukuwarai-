@@ -16,7 +16,7 @@
 
 const CONFIG = {
   sheetId:       '1nkGoMoNKc4opnD-Z_Z41I_4re8Brz7lFyBdNXJfpyIw',
-  ownerEmail:    'YOUR_EMAIL@gmail.com',  // ← ここにメールアドレスを入力
+  ownerEmail:    'omanbosan.lv@gmail.com',
   driveFolderId: '1gXwYsxpKBqZ6tMKdNyOPGVvtQTcV1QgN'
 };
 
