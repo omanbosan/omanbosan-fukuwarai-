@@ -125,7 +125,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 
 /* ─── 開始オーバーレイ ─── */
 #start-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.97);
   z-index: 800; display: flex; flex-direction: column; align-items: center; justify-content: center;
   color: #fff; text-align: center;
 }
@@ -355,30 +355,46 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <div id="total-score-disp">0点</div>
     <div id="score-sub">/ 100点満点</div>
     <div id="score-comment"></div>
-    <div id="part-breakdown"></div>
+
+    <!-- 賞品（スコア直下で目立つ位置） -->
     <div id="prize-section" style="display:none; margin:12px 0; padding:16px; border-radius:12px; text-align:center; border:3px dashed #e74c3c;">
       <div id="prize-rank" style="font-size:1.4rem; font-weight:bold; color:#c0392b; margin-bottom:4px;"></div>
       <div id="prize-name" style="font-size:1rem; margin:4px 0;"></div>
-      <div id="prize-code" style="display:none; font-size:1.3rem; font-weight:bold; color:#c0392b; letter-spacing:3px; margin:8px 0; background:white; padding:8px 16px; border-radius:8px; display:none;"></div>
-      <div style="font-size:0.75rem; color:#7f0000; margin-top:6px;">このスクリーンショットをスタッフに見せてね！</div>
+      <div id="prize-code" style="display:none; font-size:1.3rem; font-weight:bold; color:#c0392b; letter-spacing:3px; margin:8px 0; background:white; padding:8px 16px; border-radius:8px;"></div>
+      <div style="font-size:0.75rem; color:#7f0000; margin-top:6px;">📲 このスクリーンショットをスタッフに見せてね！</div>
     </div>
-    <canvas id="result-composite" width="460" height="500" style="display:none;"></canvas>
-    <p style="text-align:center;font-size:0.8rem;font-weight:bold;color:#555;margin:8px 0 2px;">📸 見本あり（長押しで保存）</p>
-    <img id="result-img" src="" alt="採点結果（見本あり）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
-    <p style="text-align:center;font-size:0.8rem;font-weight:bold;color:#555;margin:10px 0 2px;">🖼️ 見本なし（長押しで保存）</p>
-    <img id="result-img-clean" src="" alt="採点結果（見本なし）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
-    <button id="share-btn" style="display:block;margin:4px auto;padding:8px 20px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">📤 LINEやSNSでシェア</button>
-    <div id="share-result" style="display:none; margin:8px auto; text-align:center; font-size:0.8rem; color:#555;"></div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#555;margin:8px 0;">
-      <input type="checkbox" id="consent-check">
-      この作品の商業利用に同意する（作品をシェアする場合）
-    </label>
-    <input type="text" id="name-input" placeholder="ニックネーム（最大8文字）" maxlength="8"/>
-    <input type="text" id="score-instagram" placeholder="Instagramアカウント名（任意）"
-      style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:10px;font-family:inherit;"/>
-    <div class="btn-row">
-      <button onclick="saveScore()" style="background:#27ae60;color:white;">登録！</button>
-      <button onclick="closeScoreModal()" style="background:#95a5a6;color:white;">戻る</button>
+
+    <!-- パーツ内訳（折りたたみ） -->
+    <details style="margin:8px 0;">
+      <summary style="cursor:pointer;font-size:0.85rem;color:#666;padding:6px;background:#f8f9fa;border-radius:6px;">📊 パーツ別内訳を見る</summary>
+      <div id="part-breakdown" style="font-size:0.86rem;background:#f8f9fa;border-radius:0 0 8px 8px;padding:10px 12px;line-height:2.1;"></div>
+    </details>
+
+    <!-- 登録フォーム（スクロール不要の位置） -->
+    <div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px;">
+      <div style="font-size:0.82rem;color:#555;margin-bottom:6px;text-align:center;">📋 ランキングに登録する</div>
+      <input type="text" id="name-input" placeholder="ニックネーム（最大8文字）" maxlength="8"/>
+      <input type="text" id="score-instagram" placeholder="Instagramアカウント名（任意）"
+        style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:10px;font-family:inherit;"/>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#555;margin-bottom:10px;">
+        <input type="checkbox" id="consent-check">
+        この作品の商業利用に同意する
+      </label>
+      <div class="btn-row">
+        <button onclick="saveScore()" style="background:#27ae60;color:white;">🏆 登録！</button>
+        <button onclick="closeScoreModal()" style="background:#95a5a6;color:white;">戻る</button>
+      </div>
+    </div>
+
+    <!-- 結果画像（下部） -->
+    <div style="border-top:1px solid #eee;margin-top:12px;padding-top:8px;">
+      <p style="text-align:center;font-size:0.8rem;font-weight:bold;color:#555;margin:4px 0;">📸 見本あり（長押しで保存）</p>
+      <canvas id="result-composite" width="460" height="500" style="display:none;"></canvas>
+      <img id="result-img" src="" alt="採点結果（見本あり）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
+      <p style="text-align:center;font-size:0.8rem;font-weight:bold;color:#555;margin:10px 0 2px;">🖼️ 見本なし（長押しで保存）</p>
+      <img id="result-img-clean" src="" alt="採点結果（見本なし）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
+      <button id="share-btn" style="display:block;margin:8px auto;padding:8px 20px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">📤 LINEやSNSでシェア</button>
+      <div id="share-result" style="display:none; margin:8px auto; text-align:center; font-size:0.8rem; color:#555;"></div>
     </div>
   </div>
 </div>
@@ -808,6 +824,15 @@ function updatePlacedStatus() {
 // カウントダウン
 // ================================================================
 function startCountdown() {
+  // 前のゲームの描画残骸をクリア
+  const rc = document.getElementById('fh-result-canvas');
+  if (rc) rc.remove();
+  fhStrokes = {}; fhPartIndex = 0; freehandMode = false;
+  document.getElementById('freehand-overlay').style.display = 'none';
+  document.querySelectorAll('.part').forEach(el => el.style.visibility = 'visible');
+  const trayEl = document.getElementById('tray');
+  if (trayEl) trayEl.style.visibility = 'visible';
+
   const overlay = document.getElementById('start-overlay');
   const cntEl   = document.getElementById('start-countdown');
   const msgEl   = document.getElementById('start-msg');
