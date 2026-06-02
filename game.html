@@ -526,7 +526,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <!-- 生成画像（長押し保存用） -->
   <div id="odekaki-result-wrap" style="display:none;text-align:center;margin-bottom:10px;">
     <p style="font-size:0.78rem;color:#555;margin-bottom:4px;">📲 長押しで保存できます</p>
-    <img id="odekaki-result-img" src="" style="max-width:240px;border-radius:50%;border:3px solid #333;box-shadow:0 4px 12px rgba(0,0,0,0.15);" alt="お絵描き結果"/>
+    <img id="odekaki-result-img" src="" style="max-width:240px;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,0.15);" alt="お絵描き結果"/>
   </div>
   <div style="background:#e8f5e9;border-radius:10px;padding:12px;max-width:320px;font-size:0.82rem;line-height:1.8;text-align:left;color:#2d5a3d;margin-bottom:10px;">
     📖 <b>あなたの絵が図鑑に載る！</b><br>
@@ -1772,7 +1772,7 @@ async function openZukan() {
       card.innerHTML = `
         <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">No.${String(entry.no).padStart(3,'0')}</div>
         ${entry.imageUrl
-          ? `<img src="${entry.imageUrl}" style="width:80px;height:80px;border-radius:50%;border:2px solid #333;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
+          ? `<img src="${entry.imageUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
           : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎨</div>`
         }
         <div style="font-size:0.95rem;font-weight:bold;color:#c0392b;margin-bottom:3px;">${entry.villageName}</div>
