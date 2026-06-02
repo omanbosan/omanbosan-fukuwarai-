@@ -12,6 +12,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>おまんぼさんイラストゲーム</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -283,11 +286,42 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 
   <div style="background:rgba(39,174,96,0.2);border:1px solid rgba(39,174,96,0.5);border-radius:12px;padding:14px;margin-bottom:16px;width:100%;text-align:left;">
     <div style="font-size:1rem;font-weight:bold;color:#2ecc71;margin-bottom:6px;">② お絵描きチャレンジ 🖌️</div>
-    <div style="font-size:0.82rem;line-height:1.7;">
+    <div style="font-size:0.82rem;line-height:1.7;margin-bottom:8px;">
       おまんぼさんの顔を自由に描いてインスタに投稿！<br>
-      みんなの絵でアート作品を作ります🌳<br>
-      <span style="color:#aaa;">投票数の多い顔で商品化も検討中✨</span>
+      みんなの絵でアート作品を作ります🌳
     </div>
+    <svg width="100%" viewBox="0 0 280 155" style="display:block;border-radius:10px;background:#1a3a2a;">
+      <text x="140" y="14" text-anchor="middle" font-size="10" fill="#81c784" font-weight="bold" font-family="sans-serif">みんなの絵でつくる大きなアート</text>
+      <circle cx="38" cy="73" r="26" fill="white" stroke="#f39c12" stroke-width="2"/>
+      <circle cx="30" cy="68" r="3" fill="#444"/><circle cx="46" cy="68" r="3" fill="#444"/>
+      <path d="M30,80 Q38,88 46,80" stroke="#444" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <text x="38" y="112" text-anchor="middle" font-size="8" fill="#aaa" font-family="sans-serif">あなたの絵</text>
+      <line x1="70" y1="73" x2="90" y2="73" stroke="#aaa" stroke-width="1.5"/>
+      <polygon points="90,68 100,73 90,78" fill="#aaa"/>
+      <text x="85" y="67" text-anchor="middle" font-size="7" fill="#aaa" font-family="sans-serif">集まると</text>
+      <rect x="152" y="108" width="15" height="33" fill="#795548" rx="3"/>
+      <ellipse cx="159" cy="142" rx="38" ry="7" fill="#2e5e2e"/>
+      <circle cx="159" cy="45" r="16" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
+      <circle cx="152" cy="41" r="2" fill="#444"/><circle cx="163" cy="41" r="2" fill="#444"/>
+      <path d="M152,50 Q159,56 166,50" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="133" cy="72" r="14" fill="#ffccbc" stroke="#e64a19" stroke-width="1.5"/>
+      <circle cx="127" cy="68" r="2" fill="#444"/><circle cx="137" cy="68" r="2" fill="#444"/>
+      <path d="M127,76 Q133,82 139,76" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="185" cy="70" r="14" fill="#c8e6c9" stroke="#388e3c" stroke-width="1.5"/>
+      <circle cx="179" cy="66" r="2" fill="#444"/><circle cx="189" cy="66" r="2" fill="#444"/>
+      <path d="M179,74 Q185,80 191,74" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="136" cy="98" r="13" fill="#e1bee7" stroke="#7b1fa2" stroke-width="1.5"/>
+      <circle cx="130" cy="94" r="2" fill="#444"/><circle cx="140" cy="94" r="2" fill="#444"/>
+      <path d="M130,102 Q136,107 142,102" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="182" cy="97" r="13" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
+      <circle cx="176" cy="93" r="2" fill="#444"/><circle cx="186" cy="93" r="2" fill="#444"/>
+      <path d="M176,101 Q182,106 188,101" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="159" cy="97" r="13" fill="#ffe0b2" stroke="#e65100" stroke-width="1.5"/>
+      <circle cx="153" cy="93" r="2" fill="#444"/><circle cx="163" cy="93" r="2" fill="#444"/>
+      <path d="M153,101 Q159,106 165,101" stroke="#444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <text x="159" y="151" text-anchor="middle" font-size="8" fill="#81c784" font-family="sans-serif">参加者全員で大きな作品を作ろう！</text>
+    </svg>
+    <div style="font-size:0.75rem;color:#aaa;margin-top:6px;">投票数の多い顔で商品化も検討中✨</div>
   </div>
 
   <div style="display:flex;gap:12px;width:100%;">
@@ -339,7 +373,9 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <input type="checkbox" id="consent-check">
       この作品の商業利用に同意する（作品をシェアする場合）
     </label>
-    <input type="text" id="name-input" placeholder="作者名を入力（最大8文字）" maxlength="8"/>
+    <input type="text" id="name-input" placeholder="ニックネーム（最大8文字）" maxlength="8"/>
+    <input type="text" id="score-instagram" placeholder="Instagramアカウント名（任意）"
+      style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:10px;font-family:inherit;"/>
     <div class="btn-row">
       <button onclick="saveScore()" style="background:#27ae60;color:white;">登録！</button>
       <button onclick="closeScoreModal()" style="background:#95a5a6;color:white;">戻る</button>
@@ -366,12 +402,25 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   </div>
   <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;">
     <button onclick="clearOdekakiCanvas()" style="padding:8px 14px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">🗑 全消し</button>
-    <button onclick="saveOdekakiImage()" style="padding:8px 14px;background:#3498db;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">💾 保存する</button>
   </div>
+  <!-- Instagram必須登録 -->
+  <div style="background:white;border:2px solid #27ae60;border-radius:10px;padding:14px;max-width:300px;width:100%;margin-bottom:10px;">
+    <div style="font-size:0.85rem;font-weight:bold;color:#27ae60;margin-bottom:8px;">📋 参加登録（必須）</div>
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">Instagramアカウント名（@なしでOK）</div>
+    <input type="text" id="odekaki-instagram" placeholder="例: omanbo_taro"
+      style="width:100%;padding:8px;border:2px solid #27ae60;border-radius:6px;font-size:0.9rem;margin-bottom:8px;box-sizing:border-box;"
+      oninput="updateOdekakiSubmitBtn()">
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.8rem;cursor:pointer;line-height:1.4;">
+      <input type="checkbox" id="odekaki-follow-check" onchange="updateOdekakiSubmitBtn()" style="margin-top:2px;flex-shrink:0;">
+      <span><a href="https://www.instagram.com/omanbosan.lv/" target="_blank" style="color:#27ae60;font-weight:bold;">@omanbosan.lv</a> をフォロー済みです</span>
+    </label>
+  </div>
+  <button id="odekaki-save-btn" onclick="saveOdekakiImage()" disabled
+    style="padding:10px 24px;background:#3498db;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;opacity:0.5;margin-bottom:10px;">💾 投稿＆保存する</button>
   <div style="background:#e8f5e9;border-radius:10px;padding:12px;max-width:320px;font-size:0.82rem;line-height:1.8;text-align:left;color:#2d5a3d;margin-bottom:10px;">
     📸 <b>インスタグラムに投稿して参加！</b><br>
-    ① 「保存する」で画像を保存<br>
-    ② インスタグラムに投稿<br>
+    ① アカウント登録 → 「投稿＆保存する」<br>
+    ② 保存された画像をインスタグラムに投稿<br>
     ③ <b>#おまんぼさんイラスト</b> をつけてね🌿<br>
     🌳 みんなの絵でアート作品を作ります！<br>
     <span style="color:#888;font-size:0.75rem;">投票数の多い顔で商品化も検討中✨</span>
@@ -384,7 +433,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <div class="modal-box">
     <h2>🏆 ランキング</h2>
     <table id="ranking-table">
-      <thead><tr><th>順位</th><th>名前</th><th>スコア</th><th>日付</th></tr></thead>
+      <thead><tr><th>順位</th><th>名前</th><th>スコア</th><th>Instagram</th></tr></thead>
       <tbody id="ranking-tbody"></tbody>
     </table>
     <div class="btn-row" style="margin-top:12px;">
@@ -474,7 +523,9 @@ let selectedPart  = null;
 let peekLeft      = 3;
 let peekCooldown  = false;
 let lastScore     = 0;
-const WEBHOOK_URL = ''; // Set this to Google Apps Script doPost URL
+// GASバックエンドのURL（gas-backend.gsをデプロイ後ここに貼る）
+// 例: 'https://script.google.com/macros/s/XXXXXXXXXXXXXXXX/exec'
+const WEBHOOK_URL = '';
 
 let _gameScale = 1;
 
@@ -1284,31 +1335,52 @@ function closeScoreModal() {
 }
 
 // ================================================================
-// スコア保存
+// スコア保存（ローカル + GASバックエンドへ送信）
 // ================================================================
-function saveScore() {
-  const name   = (document.getElementById('name-input').value.trim() || '名無し').slice(0,8);
-  const scores = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
-  scores.push({ name, score: lastScore, date: new Date().toLocaleDateString('ja-JP') });
-  scores.sort((a,b) => b.score - a.score);
-  scores.splice(10);
-  localStorage.setItem('omanbo_illust_v1', JSON.stringify(scores));
+async function saveScore() {
+  const name      = (document.getElementById('name-input').value.trim() || '名無し').slice(0,8);
+  const instagram = (document.getElementById('score-instagram').value.trim().replace('@','') || '');
+  const entry     = { name, score: lastScore, date: new Date().toLocaleDateString('ja-JP'), instagram };
+  // ローカルに保存（オフライン対応）
+  const local = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
+  local.push(entry);
+  local.sort((a,b) => b.score - a.score);
+  local.splice(20);
+  localStorage.setItem('omanbo_illust_v1', JSON.stringify(local));
+  // GASバックエンドへ送信
+  if (WEBHOOK_URL) {
+    fetch(WEBHOOK_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'score', name, score: lastScore, instagram })
+    }).catch(()=>{});
+  }
   closeScoreModal();
   showRanking();
 }
 
 // ================================================================
-// ランキング
+// ランキング（GASから取得、失敗時はローカルフォールバック）
 // ================================================================
 document.getElementById('rank-btn').addEventListener('click', showRanking);
-function showRanking() {
-  const scores = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
-  const medals = ['🥇','🥈','🥉'];
+async function showRanking() {
   const tbody  = document.getElementById('ranking-tbody');
-  tbody.innerHTML = scores.length ? scores.map((s,i) =>
-    `<tr><td>${medals[i]||i+1}</td><td>${esc(s.name)}</td><td>${s.score}点</td><td>${s.date}</td></tr>`
-  ).join('') : '<tr><td colspan="4" style="color:#aaa;padding:12px;">まだ記録がありません</td></tr>';
+  const medals = ['🥇','🥈','🥉'];
+  tbody.innerHTML = '<tr><td colspan="4" style="color:#aaa;padding:12px;">読み込み中...</td></tr>';
   document.getElementById('rank-modal').classList.add('show');
+  let scores = [];
+  if (WEBHOOK_URL) {
+    try {
+      const res = await fetch(WEBHOOK_URL + '?type=ranking', { cache: 'no-store' });
+      if (res.ok) scores = await res.json();
+    } catch(e) {}
+  }
+  if (!scores.length) {
+    scores = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
+  }
+  tbody.innerHTML = scores.length ? scores.map((s,i) =>
+    `<tr><td>${medals[i]||i+1}</td><td>${esc(s.name)}</td><td>${s.score}点</td><td>${s.instagram ? '@'+esc(s.instagram) : s.date}</td></tr>`
+  ).join('') : '<tr><td colspan="4" style="color:#aaa;padding:12px;">まだ記録がありません</td></tr>';
 }
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -1433,7 +1505,26 @@ function clearOdekakiCanvas() {
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function saveOdekakiImage() {
+function updateOdekakiSubmitBtn() {
+  const ig      = (document.getElementById('odekaki-instagram').value || '').trim();
+  const checked = document.getElementById('odekaki-follow-check').checked;
+  const btn     = document.getElementById('odekaki-save-btn');
+  const ok = ig.length > 0 && checked;
+  btn.disabled = !ok;
+  btn.style.opacity = ok ? '1' : '0.5';
+  btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+}
+
+async function saveOdekakiImage() {
+  const ig  = (document.getElementById('odekaki-instagram').value || '').trim().replace('@','');
+  const followed = document.getElementById('odekaki-follow-check').checked;
+  if (!ig || !followed) {
+    alert('Instagramアカウント名を入力して、フォロー確認にチェックしてください');
+    return;
+  }
+  const btn = document.getElementById('odekaki-save-btn');
+  btn.textContent = '送信中...'; btn.disabled = true;
+
   const canvas = document.getElementById('odekaki-canvas');
   const out = document.createElement('canvas');
   out.width = 300; out.height = 300;
@@ -1443,10 +1534,30 @@ function saveOdekakiImage() {
   ctx.strokeStyle = '#333'; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.arc(150,150,146,0,Math.PI*2); ctx.stroke();
   ctx.drawImage(canvas, 0, 0);
+  const dataUrl = out.toDataURL('image/png');
+
+  // ダウンロード
   const link = document.createElement('a');
-  link.download = 'omanbo_illust.png';
-  link.href = out.toDataURL('image/png');
+  link.download = `omanbo_${ig}.png`;
+  link.href = dataUrl;
   link.click();
+
+  // GASバックエンドへ送信（画像 + メール通知）
+  if (WEBHOOK_URL) {
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ type: 'drawing', instagram: ig, image: dataUrl })
+      });
+      alert(`💌 投稿データが届きました！\nインスタグラムに画像を投稿して\n#おまんぼさんイラスト をつけてね🌿`);
+    } catch(e) {
+      alert('画像を保存しました！インスタグラムに投稿してね📸\n#おまんぼさんイラスト');
+    }
+  } else {
+    alert('画像を保存しました！インスタグラムに投稿してね📸\n#おまんぼさんイラスト');
+  }
+  btn.textContent = '💾 投稿＆保存する'; btn.disabled = false; btn.style.opacity = '1';
 }
 
 function closeOdekakiOverlay() {
