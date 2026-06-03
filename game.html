@@ -2033,42 +2033,81 @@ async function saveOdekakiImage() {
 // ================================================================
 // 図鑑
 // ================================================================
+// ================================================================
+// 図鑑キャッシュ（ページ読み込み時に先読みしておく）
+// ================================================================
+let zukanCache    = null;   // 取得済みデータ
+let zukanPromise  = null;   // 進行中のfetch Promise（重複防止）
+const ZUKAN_TTL   = 5 * 60 * 1000; // 5分でキャッシュ無効化
+let zukanFetchedAt = 0;
+
+function prefetchZukan() {
+  if (zukanPromise) return; // すでに取得中
+  if (zukanCache && Date.now() - zukanFetchedAt < ZUKAN_TTL) return; // キャッシュ有効
+  zukanPromise = fetch(WEBHOOK_URL + '?type=zukan')
+    .then(r => r.json())
+    .then(data => {
+      zukanCache    = data;
+      zukanFetchedAt = Date.now();
+      zukanPromise  = null;
+    })
+    .catch(() => { zukanPromise = null; });
+}
+
 async function openZukan() {
   document.getElementById('zukan-modal').classList.add('show');
   const list    = document.getElementById('zukan-list');
   const loading = document.getElementById('zukan-loading');
   const empty   = document.getElementById('zukan-empty');
+
+  // キャッシュがあれば即座に表示
+  if (zukanCache && Date.now() - zukanFetchedAt < ZUKAN_TTL) {
+    loading.style.display = 'none';
+    renderZukanList(list, empty, zukanCache);
+    // バックグラウンドで静かに更新（次回用）
+    setTimeout(prefetchZukan, 500);
+    return;
+  }
+
+  // キャッシュなし or 期限切れ → ローディング表示して取得
   list.innerHTML = '';
   loading.style.display = 'block';
   empty.style.display = 'none';
 
   try {
-    const res  = await fetch(WEBHOOK_URL + '?type=zukan');
-    const data = await res.json();
+    // 進行中のfetchがあればそれを待つ、なければ新規fetch
+    if (!zukanPromise) prefetchZukan();
+    await zukanPromise;
     loading.style.display = 'none';
-    if (!data || data.length === 0) {
-      empty.style.display = 'block';
-      return;
-    }
-    data.forEach(entry => {
-      const card = document.createElement('div');
-      card.style.cssText = 'background:#fffbf0;border:2px solid #f39c12;border-radius:10px;padding:10px;text-align:center;';
-      card.innerHTML = `
-        <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">No.${String(entry.no).padStart(3,'0')}</div>
-        ${entry.imageUrl
-          ? `<img src="${entry.imageUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
-          : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎨</div>`
-        }
-        <div style="font-size:0.95rem;font-weight:bold;color:#c0392b;margin-bottom:3px;">${entry.villageName}</div>
-        ${entry.comment ? `<div style="font-size:0.75rem;color:#666;margin-bottom:3px;">「${entry.comment}」</div>` : ''}
-        <div style="font-size:0.7rem;color:#aaa;">@${entry.instagram}</div>
-        <div style="font-size:0.65rem;color:#bbb;">${entry.date}</div>
-      `;
-      list.appendChild(card);
-    });
+    renderZukanList(list, empty, zukanCache);
   } catch(e) {
     loading.textContent = '読み込みに失敗しました';
   }
+}
+
+function renderZukanList(list, empty, data) {
+  list.innerHTML = '';
+  if (!data || data.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  data.forEach(entry => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fffbf0;border:2px solid #f39c12;border-radius:10px;padding:10px;text-align:center;';
+    card.innerHTML = `
+      <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">No.${String(entry.no).padStart(3,'0')}</div>
+      ${entry.imageUrl
+        ? `<img src="${entry.imageUrl}" loading="lazy" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
+        : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎨</div>`
+      }
+      <div style="font-size:0.95rem;font-weight:bold;color:#c0392b;margin-bottom:3px;">${entry.villageName}</div>
+      ${entry.comment ? `<div style="font-size:0.75rem;color:#666;margin-bottom:3px;">「${entry.comment}」</div>` : ''}
+      <div style="font-size:0.7rem;color:#aaa;">@${entry.instagram}</div>
+      <div style="font-size:0.65rem;color:#bbb;">${entry.date}</div>
+    `;
+    list.appendChild(card);
+  });
 }
 
 function closeOdekakiOverlay() {
@@ -2222,7 +2261,15 @@ function setupOdekakiCanvas() {
 // ================================================================
 // 起動
 // ================================================================
-window.addEventListener('load', () => { setTimeout(() => { initParts(); applyGameScale(); document.getElementById('how-to-overlay').style.display = 'flex'; }, 120); });
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    initParts();
+    applyGameScale();
+    document.getElementById('how-to-overlay').style.display = 'flex';
+  }, 120);
+  // 図鑑データをバックグラウンドで先読み（GASコールドスタート対策）
+  setTimeout(prefetchZukan, 1500);
+});
 </script>
 </body>
 </html>
