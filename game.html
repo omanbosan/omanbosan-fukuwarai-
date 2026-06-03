@@ -492,20 +492,23 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       style="padding:5px 14px;border:2px solid #27ae60;background:white;color:#27ae60;border-radius:20px;font-size:0.78rem;font-weight:bold;cursor:pointer;">⭐ 上級（レイヤー）</button>
   </div>
 
-  <!-- キャンバスエリア（3レイヤー） -->
+  <!-- キャンバスエリア（3レイヤー・円形クリップ） -->
   <div style="position:relative;width:300px;height:300px;flex-shrink:0;margin-bottom:4px;">
-    <!-- 白背景レイヤー（最下層・絶対に触らない） -->
-    <canvas id="odekaki-canvas-bg" width="300" height="300"
-      style="position:absolute;top:0;left:0;border-radius:50%;pointer-events:none;"></canvas>
-    <!-- 塗りレイヤー（中層） -->
-    <canvas id="odekaki-canvas-fill" width="300" height="300"
-      style="position:absolute;top:0;left:0;border-radius:50%;pointer-events:none;"></canvas>
-    <!-- 線レイヤー（上層・タッチ受付） -->
-    <canvas id="odekaki-canvas" width="300" height="300"
-      style="position:absolute;top:0;left:0;touch-action:none;cursor:crosshair;border-radius:50%;"></canvas>
-    <!-- 輪郭（最前面・クリック透過） -->
+    <!-- クリップ用コンテナ（はみ出し防止） -->
+    <div style="position:absolute;top:0;left:0;width:300px;height:300px;border-radius:50%;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+      <!-- 白背景レイヤー（最下層・絶対に触らない） -->
+      <canvas id="odekaki-canvas-bg" width="300" height="300"
+        style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
+      <!-- 塗りレイヤー（中層） -->
+      <canvas id="odekaki-canvas-fill" width="300" height="300"
+        style="position:absolute;top:0;left:0;pointer-events:none;"></canvas>
+      <!-- 線レイヤー（上層・タッチ受付） -->
+      <canvas id="odekaki-canvas" width="300" height="300"
+        style="position:absolute;top:0;left:0;touch-action:none;cursor:crosshair;"></canvas>
+    </div>
+    <!-- 輪郭SVG（クリップ外・最前面・クリック透過） -->
     <svg width="300" height="300" style="position:absolute;top:0;left:0;pointer-events:none;z-index:5;">
-      <circle cx="150" cy="150" r="146" fill="none" stroke="#333" stroke-width="3"/>
+      <circle cx="150" cy="150" r="148" fill="none" stroke="#333" stroke-width="3"/>
     </svg>
     <!-- 上級モード: レイヤーラベル -->
     <div id="layer-label" style="display:none;position:absolute;top:4px;right:4px;z-index:6;font-size:0.65rem;font-weight:bold;padding:2px 7px;border-radius:10px;background:#e67e22;color:white;">塗りレイヤー</div>
