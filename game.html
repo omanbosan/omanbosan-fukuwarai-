@@ -291,9 +291,9 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <div style="background:rgba(39,174,96,0.2);border:1px solid rgba(39,174,96,0.5);border-radius:12px;padding:14px;margin-bottom:16px;width:100%;text-align:left;">
     <div style="font-size:1rem;font-weight:bold;color:#2ecc71;margin-bottom:6px;">② お絵描きチャレンジ 🖌️</div>
     <div style="font-size:0.85rem;line-height:1.8;margin-bottom:10px;">
-      おまんぼさんの顔を自由に描いて<b>村人として図鑑に登録</b>しよう！<br>
-      描いた顔に名前をつけると、あなたオリジナルの村人が誕生。<br>
-      村にはいろんな顔が増えていく…その中に<b>本物のおまんぼさん</b>が隠れているかも？🔍
+      おまんぼさんの顔を自由に描いて<b>キャラクターとして図鑑に登録</b>しよう！<br>
+      描いた顔に名前をつけると、あなたオリジナルのキャラクターが誕生。<br>
+      個性豊かな顔がどんどん増えていく…その中に<b>本物のおまんぼさん</b>が隠れているかも？🔍
     </div>
 
     <!-- フロー図 -->
@@ -311,7 +311,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       </div>
       <div style="color:#aaa;font-size:1rem;">→</div>
       <div style="background:rgba(39,174,96,0.4);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#dfd;line-height:1.5;min-width:58px;">
-        🏘️<br>村の住人に！
+        🎭<br>キャラクターに！
       </div>
     </div>
 
@@ -396,9 +396,9 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <polygon points="78,75 72,68 84,67" fill="#27ae60"/>
 
       <!-- 下キャプション -->
-      <text x="140" y="170" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold" font-family="sans-serif">村人が増えるほど本物が見つけにくくなる！</text>
+      <text x="140" y="170" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold" font-family="sans-serif">キャラクターが増えるほど本物が見つけにくくなる！</text>
     </svg>
-    <div style="font-size:0.75rem;color:#aaa;margin-top:6px;">人気の村人は商品化も検討中✨ / 定期的に「本物を探せ！」クイズ開催予定🔍</div>
+    <div style="font-size:0.75rem;color:#aaa;margin-top:6px;">人気のキャラクターは商品化も検討中✨ / 定期的に「本物を探せ！」クイズ開催予定🔍</div>
   </div>
 
   <div style="display:flex;gap:12px;width:100%;margin-bottom:10px;">
@@ -406,11 +406,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       🎯 採点チャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">スコアを競おう！</span>
     </button>
     <button onclick="selectModeAndStart('drawing')" style="flex:1;padding:16px 8px;background:#27ae60;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;line-height:1.5;">
-      🎨 お絵描きチャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">村人になろう！</span>
+      🎨 お絵描きチャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">キャラクターになろう！</span>
     </button>
   </div>
   <button onclick="openZukan()" style="width:100%;padding:13px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;">
-    📖 おまんぼさん図鑑を見る<br><span style="font-size:0.72rem;font-weight:normal;">みんなの村人たちに会いに行こう</span>
+    📖 おまんぼさん図鑑を見る<br><span style="font-size:0.72rem;font-weight:normal;">みんなのキャラクターたちに会いに行こう</span>
   </button>
 </div>
 
@@ -568,12 +568,12 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <div style="background:white;border:2px solid #27ae60;border-radius:10px;padding:14px;max-width:300px;width:100%;margin-bottom:10px;">
     <div style="font-size:0.85rem;font-weight:bold;color:#27ae60;margin-bottom:8px;">📖 図鑑に登録する（必須）</div>
 
-    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">🏷️ この村人の名前（必須・最大10文字）</div>
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">🏷️ キャラクター名（必須・最大10文字）</div>
     <input type="text" id="odekaki-name" placeholder="" maxlength="10"
       style="width:100%;padding:8px;border:2px solid #e67e22;border-radius:6px;font-size:0.95rem;margin-bottom:8px;box-sizing:border-box;font-weight:bold;"
       oninput="updateOdekakiSubmitBtn()">
 
-    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">💬 この村人のひとこと（任意・最大20文字）</div>
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">💬 このキャラクターのひとこと（任意・最大20文字）</div>
     <input type="text" id="odekaki-comment" placeholder="例: 眉毛が自慢" maxlength="20"
       style="width:100%;padding:8px;border:2px solid #ddd;border-radius:6px;font-size:0.9rem;margin-bottom:10px;box-sizing:border-box;">
 
@@ -595,11 +595,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   </div>
   <div style="background:#e8f5e9;border-radius:10px;padding:12px;max-width:320px;font-size:0.82rem;line-height:1.8;text-align:left;color:#2d5a3d;margin-bottom:10px;">
     📖 <b>あなたの絵が図鑑に載る！</b><br>
-    ① 絵を描いて村人名をつける<br>
+    ① 絵を描いてキャラクター名をつける<br>
     ② 「投稿＆図鑑登録する」を押す<br>
     ③ <b>#おまんぼさんイラスト</b> でインスタに投稿🌿<br>
-    🔍 村に紛れた本物のおまんぼさんを探せ！<br>
-    <span style="color:#888;font-size:0.75rem;">人気の村人は商品化も検討中✨</span>
+    🔍 キャラクターに紛れた本物のおまんぼさんを探せ！<br>
+    <span style="color:#888;font-size:0.75rem;">人気のキャラクターは商品化も検討中✨</span>
   </div>
   <button onclick="openZukan()" style="padding:10px 24px;background:#e67e22;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;margin-bottom:8px;">📖 図鑑を見る</button>
   <button onclick="closeOdekakiOverlay()" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">← 戻る</button>
@@ -609,10 +609,10 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 <div class="modal-bg" id="zukan-modal">
   <div class="modal-box" style="max-width:480px;">
     <h2 style="color:#e67e22;">📖 おまんぼさん図鑑</h2>
-    <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">みんなが生み出した村人たち</p>
+    <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">みんなが生み出したキャラクターたち</p>
     <div id="zukan-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
     <div id="zukan-loading" style="text-align:center;padding:20px;color:#888;font-size:0.9rem;">読み込み中...</div>
-    <div id="zukan-empty" style="display:none;text-align:center;padding:20px;color:#aaa;font-size:0.85rem;">まだ村人がいません。<br>最初の村人になろう！</div>
+    <div id="zukan-empty" style="display:none;text-align:center;padding:20px;color:#aaa;font-size:0.85rem;">まだキャラクターがいません。<br>最初のキャラクターになろう！</div>
     <button onclick="document.getElementById('zukan-modal').classList.remove('show')" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">閉じる</button>
   </div>
 </div>
@@ -1904,22 +1904,19 @@ function floodFill(fillCanvas, lineCanvas, startX, startY, fillHex) {
 
   const tolerance = 30;
 
-  // ── 壁マスクを生成（線キャンバスを1px膨張させてアンチエイリアス隙間を埋める） ──
+  // ── 壁マスクを生成 ──
+  // 1) 線キャンバスのピクセル（alpha > 10）= 壁
+  // 2) キャンバス外周の円の外側 = 壁（CSS clip外の透明ピクセルへの漏れを防ぐ）
+  const CX = W / 2, CY = H / 2, R = W / 2 - 1; // 円半径
   const wall = new Uint8Array(W * H);
-  for (let i = 0; i < W * H; i++) {
-    if (ld[i * 4 + 3] > 15) wall[i] = 1; // 閾値を低めに設定
-  }
-  // 8方向に1px膨張（斜め方向の隙間も塞ぐ）
-  const wallDilated = new Uint8Array(W * H);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      if (!wall[y * W + x]) continue;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const nx = x + dx, ny = y + dy;
-          if (nx >= 0 && nx < W && ny >= 0 && ny < H) wallDilated[ny * W + nx] = 1;
-        }
-      }
+      const i = y * W + x;
+      // 線キャンバスに描画あり
+      if (ld[i * 4 + 3] > 10) { wall[i] = 1; continue; }
+      // 円の外側
+      const dx = x - CX, dy = y - CY;
+      if (dx * dx + dy * dy >= R * R) wall[i] = 1;
     }
   }
 
@@ -1931,6 +1928,7 @@ function floodFill(fillCanvas, lineCanvas, startX, startY, fillHex) {
            Math.abs(fd[pi+3]-ta) <= tolerance;
   }
 
+  // BFS塗りつぶし
   const visited = new Uint8Array(W * H);
   const stack   = [startX + startY * W];
   visited[startX + startY * W] = 1;
@@ -1950,9 +1948,33 @@ function floodFill(fillCanvas, lineCanvas, startX, startY, fillHex) {
       if (visited[ni]) continue;
       visited[ni] = 1;
       const npi = ni * 4;
-      if (!wallDilated[ni] && matchesFill(npi)) stack.push(ni);
+      if (!wall[ni] && matchesFill(npi)) stack.push(ni);
     }
   }
+
+  // ── 塗りを1px拡張して線との境界の白いギャップを埋める ──
+  // 塗りが届いたピクセルを記録
+  const filled = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    const pi = i * 4;
+    if (fd[pi+3] === 255 && fd[pi] === fr && fd[pi+1] === fg && fd[pi+2] === fb) filled[i] = 1;
+  }
+  // 塗り済みピクセルの8近傍で未塗りのピクセルにも色を置く（線の下に潜り込む）
+  for (let y = 1; y < H-1; y++) {
+    for (let x = 1; x < W-1; x++) {
+      if (!filled[y*W+x]) continue;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const ni = (y+dy)*W + (x+dx);
+          if (!filled[ni]) {
+            const npi = ni * 4;
+            fd[npi] = fr; fd[npi+1] = fg; fd[npi+2] = fb; fd[npi+3] = 255;
+          }
+        }
+      }
+    }
+  }
+
   fillCtx.putImageData(fillImgD, 0, 0);
 }
 
@@ -1973,7 +1995,7 @@ async function saveOdekakiImage() {
   const ig          = (document.getElementById('odekaki-instagram').value || '').trim().replace('@','');
   const followed    = document.getElementById('odekaki-follow-check').checked;
   if (!villageName || !ig || !followed) {
-    alert('村人名・Instagramアカウント・フォロー確認をすべて入力してください');
+    alert('キャラクター名・Instagramアカウント・フォロー確認をすべて入力してください');
     return;
   }
   const btn = document.getElementById('odekaki-save-btn');
@@ -2028,7 +2050,7 @@ async function saveOdekakiImage() {
       });
     } catch(e) {}
   }
-  alert(`✅ 図鑑に登録完了！\n「${villageName}」が村人になりました🎉\n\n画像は上の丸い画像を長押しして保存📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね🌿`);
+  alert(`✅ 図鑑に登録完了！\n「${villageName}」がキャラクターになりました🎉\n\n画像は上の丸い画像を長押しして保存📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね🌿`);
   btn.textContent = '💾 投稿＆図鑑登録する'; btn.disabled = false; btn.style.opacity = '1';
 }
 
