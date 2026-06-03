@@ -492,12 +492,15 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       style="padding:5px 14px;border:2px solid #27ae60;background:white;color:#27ae60;border-radius:20px;font-size:0.78rem;font-weight:bold;cursor:pointer;">⭐ 上級（レイヤー）</button>
   </div>
 
-  <!-- キャンバスエリア（輪郭はみ出しOK） -->
+  <!-- キャンバスエリア（3レイヤー） -->
   <div style="position:relative;width:300px;height:300px;flex-shrink:0;margin-bottom:4px;">
-    <!-- 塗りつぶしレイヤー（下） -->
+    <!-- 白背景レイヤー（最下層・絶対に触らない） -->
+    <canvas id="odekaki-canvas-bg" width="300" height="300"
+      style="position:absolute;top:0;left:0;border-radius:50%;pointer-events:none;"></canvas>
+    <!-- 塗りレイヤー（中層） -->
     <canvas id="odekaki-canvas-fill" width="300" height="300"
       style="position:absolute;top:0;left:0;border-radius:50%;pointer-events:none;"></canvas>
-    <!-- 描画レイヤー（上・タッチ受付） -->
+    <!-- 線レイヤー（上層・タッチ受付） -->
     <canvas id="odekaki-canvas" width="300" height="300"
       style="position:absolute;top:0;left:0;touch-action:none;cursor:crosshair;border-radius:50%;"></canvas>
     <!-- 輪郭（最前面・クリック透過） -->
@@ -1810,11 +1813,8 @@ function clearOdekakiCanvas() {
   const c1 = document.getElementById('odekaki-canvas');
   const c2 = document.getElementById('odekaki-canvas-fill');
   if (c1) c1.getContext('2d').clearRect(0, 0, c1.width, c1.height);
-  if (c2) {
-    const ctx = c2.getContext('2d');
-    ctx.clearRect(0, 0, c2.width, c2.height);
-    initFillCanvas(); // 白背景を再初期化
-  }
+  if (c2) c2.getContext('2d').clearRect(0, 0, c2.width, c2.height);
+  // 白背景は触らない（initBgCanvasは起動時のみ）
   updateUndoRedoBtns();
 }
 
@@ -1875,15 +1875,17 @@ function updateUndoRedoBtns() {
   rb.style.opacity = rb.disabled ? '0.4' : '1';
 }
 
-// 塗りつぶしレイヤーを白い円で初期化
-function initFillCanvas() {
-  const c = document.getElementById('odekaki-canvas-fill');
+// 白背景レイヤーを初期化（起動時のみ・絶対に変更しない）
+function initBgCanvas() {
+  const c = document.getElementById('odekaki-canvas-bg');
   if (!c) return;
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, c.width, c.height);
   ctx.fillStyle = 'white';
   ctx.beginPath(); ctx.arc(150, 150, 146, 0, Math.PI * 2); ctx.fill();
 }
+// 後方互換
+function initFillCanvas() { initBgCanvas(); }
 
 // ================================================================
 // フラッドフィル（バケツ塗り）
@@ -1963,6 +1965,7 @@ async function saveOdekakiImage() {
   const btn = document.getElementById('odekaki-save-btn');
   btn.textContent = '図鑑に登録中...'; btn.disabled = true;
 
+  const canvasBg   = document.getElementById('odekaki-canvas-bg');
   const canvasFill = document.getElementById('odekaki-canvas-fill');
   const canvasLine = document.getElementById('odekaki-canvas');
   const out = document.createElement('canvas');
@@ -1971,8 +1974,7 @@ async function saveOdekakiImage() {
   // 円形クリップ（輪郭より少し外まで許可して髪のはみ出しOK）
   ctx.save();
   ctx.beginPath(); ctx.arc(150,150,149,0,Math.PI*2); ctx.clip();
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0,0,300,300);
+  if (canvasBg)   ctx.drawImage(canvasBg,   0, 0); // 白背景
   if (canvasFill) ctx.drawImage(canvasFill, 0, 0); // 塗りレイヤー
   if (canvasLine) ctx.drawImage(canvasLine, 0, 0); // 線レイヤー
   ctx.restore();
@@ -2063,8 +2065,11 @@ function closeOdekakiOverlay() {
 }
 
 function setupOdekakiCanvas() {
-  // 塗りレイヤー初期化（白い円）
-  initFillCanvas();
+  // 白背景レイヤー初期化（1回だけ）
+  initBgCanvas();
+  // 塗り・線レイヤーはクリア
+  const cf = document.getElementById('odekaki-canvas-fill');
+  if (cf) cf.getContext('2d').clearRect(0, 0, cf.width, cf.height);
 
   // ツール・モードを初期状態に
   setOdekakiTool('pen');
@@ -2130,6 +2135,7 @@ function setupOdekakiCanvas() {
     applyToolStyle(cx);
     cx.lineTo(pos.x, pos.y); cx.stroke();
     cx.beginPath(); cx.moveTo(pos.x, pos.y);
+    eraseOnFillIfBeginner(pos); // 初級消しゴム：塗りレイヤーも同時消去
   }
 
   function onEnd(e) {
@@ -2141,10 +2147,13 @@ function setupOdekakiCanvas() {
     odekakiDrawing = false;
   }
 
-  // 消しゴムは常に線レイヤーへ（塗りレイヤーの白背景を守る）
+  // 消しゴム：初級=塗り+線の両方を消す、上級=選択レイヤーのみ
   function getEraserOrDrawCanvas() {
     if (odekakiTool === 'eraser') {
-      return document.getElementById('odekaki-canvas'); // 常に線レイヤー
+      if (odekakiMode === 'advanced') {
+        return document.getElementById(odekakiLayer === 'fill' ? 'odekaki-canvas-fill' : 'odekaki-canvas');
+      }
+      return document.getElementById('odekaki-canvas'); // 初級は線レイヤー代表（両方は onMove で処理）
     }
     return getDrawCanvas();
   }
@@ -2158,6 +2167,18 @@ function setupOdekakiCanvas() {
       cx.strokeStyle = odekakiColor;
       cx.lineWidth = ODEKAKI_SIZES[odekakiSize] || 5;
     }
+  }
+
+  // 初級モードの消しゴムは塗りレイヤーにも同時適用
+  function eraseOnFillIfBeginner(pos) {
+    if (odekakiTool !== 'eraser' || odekakiMode !== 'beginner') return;
+    const fc = document.getElementById('odekaki-canvas-fill');
+    const fx = fc.getContext('2d');
+    fx.lineCap = 'round'; fx.lineJoin = 'round';
+    fx.globalCompositeOperation = 'destination-out';
+    fx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
+    fx.lineTo(pos.x, pos.y); fx.stroke();
+    fx.beginPath(); fx.moveTo(pos.x, pos.y);
   }
 
   c.addEventListener('mousedown',  onStart);
