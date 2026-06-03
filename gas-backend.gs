@@ -328,3 +328,27 @@ function testMail() {
   });
   Logger.log('✅ メール送信OK');
 }
+
+// ----------------------------------------------------------------
+// 【初回のみ実行】承認列をセットアップ
+// drawingsシートにH列「承認」を追加し、既存データを全て「承認済み」にする
+// ----------------------------------------------------------------
+function setupApprovalColumn() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('drawings');
+  if (!sheet) { Logger.log('❌ drawingsシートが見つかりません'); return; }
+
+  const lastRow = sheet.getLastRow();
+
+  // H1にヘッダー追加
+  sheet.getRange(1, 8).setValue('承認');
+
+  // 既存データ（2行目以降）をすべて「承認済み」に設定
+  if (lastRow >= 2) {
+    const range = sheet.getRange(2, 8, lastRow - 1, 1);
+    const values = Array(lastRow - 1).fill(['承認済み']);
+    range.setValues(values);
+  }
+
+  Logger.log(`✅ 承認列セットアップ完了！${lastRow - 1}件を「承認済み」に設定しました`);
+}
