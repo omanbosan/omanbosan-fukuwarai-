@@ -517,6 +517,16 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button id="redo-btn" onclick="redoOdekaki()"
       style="padding:7px 12px;background:white;color:#555;border:2px solid #aaa;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;" disabled>↪</button>
   </div>
+  <!-- 消しゴム：レイヤー選択（消しゴム選択時のみ表示） -->
+  <div id="eraser-layer-selector" style="display:none;gap:6px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;">
+    <span style="font-size:0.72rem;color:#666;align-self:center;">消す対象：</span>
+    <button id="erase-layer-btn-line" onclick="setEraseLayer('line')"
+      style="padding:5px 12px;background:#27ae60;color:white;border:2px solid #27ae60;border-radius:8px;font-size:0.78rem;font-weight:bold;cursor:pointer;">✏️ 線</button>
+    <button id="erase-layer-btn-fill" onclick="setEraseLayer('fill')"
+      style="padding:5px 12px;background:white;color:#27ae60;border:2px solid #27ae60;border-radius:8px;font-size:0.78rem;font-weight:bold;cursor:pointer;">🎨 塗り</button>
+    <button id="erase-layer-btn-both" onclick="setEraseLayer('both')"
+      style="padding:5px 12px;background:white;color:#27ae60;border:2px solid #27ae60;border-radius:8px;font-size:0.78rem;font-weight:bold;cursor:pointer;">両方</button>
+  </div>
   <!-- 線の太さ -->
   <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
     <span style="font-size:0.72rem;color:#666;">太さ：</span>
@@ -1720,9 +1730,10 @@ function selectModeAndStart(mode) {
 // ================================================================
 // お絵描きチャレンジ
 // ================================================================
-let odekakiColor   = '#111111';
-let odekakiTool    = 'pen';      // 'pen' | 'bucket' | 'eraser'
-let odekakiSize    = 'thin';     // 'thin' | 'mid' | 'thick'
+let odekakiColor      = '#111111';
+let odekakiTool       = 'pen';      // 'pen' | 'bucket' | 'eraser'
+let odekakiSize       = 'thin';     // 'thin' | 'mid' | 'thick'
+let odekakiEraseLayer = 'line';     // 'line' | 'fill' | 'both'
 let odekakiDrawing = false;
 let odekakiUndoStack = []; // { fill: ImageData, line: ImageData }[]
 let odekakiRedoStack = [];
@@ -1760,9 +1771,22 @@ function setOdekakiTool(tool) {
     btn.style.background = t === tool ? '#27ae60' : 'white';
     btn.style.color      = t === tool ? 'white'   : '#27ae60';
   });
+  // 消しゴムレイヤー選択を表示/非表示
+  const sel = document.getElementById('eraser-layer-selector');
+  if (sel) sel.style.display = tool === 'eraser' ? 'flex' : 'none';
   // カーソル更新
   const c = document.getElementById('odekaki-canvas');
-  if (c) c.style.cursor = tool === 'eraser' ? 'cell' : (tool === 'bucket' ? 'crosshair' : 'crosshair');
+  if (c) c.style.cursor = tool === 'eraser' ? 'cell' : 'crosshair';
+}
+
+function setEraseLayer(layer) {
+  odekakiEraseLayer = layer;
+  ['line','fill','both'].forEach(l => {
+    const btn = document.getElementById('erase-layer-btn-' + l);
+    if (!btn) return;
+    btn.style.background = l === layer ? '#27ae60' : 'white';
+    btn.style.color      = l === layer ? 'white'   : '#27ae60';
+  });
 }
 
 
@@ -2091,76 +2115,87 @@ function setupOdekakiCanvas() {
 
     saveOdekakiSnapshot(); // ストローク開始前にスナップショット
     odekakiDrawing = true;
-    const dc = getEraserOrDrawCanvas();
+
+    // 消しゴム：対象レイヤーのパスを初期化
+    if (odekakiTool === 'eraser') {
+      const eraseLine = odekakiEraseLayer === 'line' || odekakiEraseLayer === 'both';
+      const eraseFill = odekakiEraseLayer === 'fill' || odekakiEraseLayer === 'both';
+      if (eraseLine) {
+        const lc = document.getElementById('odekaki-canvas');
+        const lx = lc.getContext('2d');
+        lx.lineCap = 'round'; lx.lineJoin = 'round';
+        lx.globalCompositeOperation = 'destination-out';
+        lx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
+        lx.beginPath(); lx.moveTo(pos.x, pos.y);
+      }
+      if (eraseFill) {
+        const fc = document.getElementById('odekaki-canvas-fill');
+        const fx = fc.getContext('2d');
+        fx.lineCap = 'round'; fx.lineJoin = 'round';
+        fx.globalCompositeOperation = 'destination-out';
+        fx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
+        fx.beginPath(); fx.moveTo(pos.x, pos.y);
+      }
+      return;
+    }
+
+    const dc = getDrawCanvas();
     const cx = dc.getContext('2d');
     cx.lineCap = 'round'; cx.lineJoin = 'round';
-    applyToolStyle(cx);
+    cx.globalCompositeOperation = 'source-over';
+    cx.strokeStyle = odekakiColor;
+    cx.lineWidth = ODEKAKI_SIZES[odekakiSize] || 5;
     cx.beginPath(); cx.moveTo(pos.x, pos.y);
-
-    // 消しゴム：塗りレイヤーのパスも初期化
-    if (odekakiTool === 'eraser') {
-      const fc = document.getElementById('odekaki-canvas-fill');
-      const fx = fc.getContext('2d');
-      fx.lineCap = 'round'; fx.lineJoin = 'round';
-      fx.globalCompositeOperation = 'destination-out';
-      fx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
-      fx.beginPath(); fx.moveTo(pos.x, pos.y);
-    }
   }
 
   function onMove(e) {
     e.preventDefault();
     if (!odekakiDrawing || odekakiTool === 'bucket') return;
     const pos = getPos(e);
-    const dc = getEraserOrDrawCanvas();
+
+    if (odekakiTool === 'eraser') {
+      const eraseLine = odekakiEraseLayer === 'line' || odekakiEraseLayer === 'both';
+      const eraseFill = odekakiEraseLayer === 'fill' || odekakiEraseLayer === 'both';
+      if (eraseLine) {
+        const lc = document.getElementById('odekaki-canvas');
+        const lx = lc.getContext('2d');
+        lx.globalCompositeOperation = 'destination-out';
+        lx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
+        lx.lineTo(pos.x, pos.y); lx.stroke();
+        lx.beginPath(); lx.moveTo(pos.x, pos.y);
+      }
+      if (eraseFill) {
+        const fc = document.getElementById('odekaki-canvas-fill');
+        const fx = fc.getContext('2d');
+        fx.globalCompositeOperation = 'destination-out';
+        fx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
+        fx.lineTo(pos.x, pos.y); fx.stroke();
+        fx.beginPath(); fx.moveTo(pos.x, pos.y);
+      }
+      return;
+    }
+
+    const dc = getDrawCanvas();
     const cx = dc.getContext('2d');
-    applyToolStyle(cx);
+    cx.globalCompositeOperation = 'source-over';
+    cx.strokeStyle = odekakiColor;
+    cx.lineWidth = ODEKAKI_SIZES[odekakiSize] || 5;
     cx.lineTo(pos.x, pos.y); cx.stroke();
     cx.beginPath(); cx.moveTo(pos.x, pos.y);
-    eraseOnFill(pos); // 消しゴム：塗りレイヤーも同時消去
   }
 
   function onEnd(e) {
     e.preventDefault();
     if (odekakiDrawing) {
-      const dc = getEraserOrDrawCanvas();
-      dc.getContext('2d').globalCompositeOperation = 'source-over';
-      // 消しゴム：塗りレイヤーのcompositeもリセット
-      if (odekakiTool === 'eraser') {
-        document.getElementById('odekaki-canvas-fill').getContext('2d').globalCompositeOperation = 'source-over';
-      }
+      // compositeOperation をリセット
+      document.getElementById('odekaki-canvas').getContext('2d').globalCompositeOperation = 'source-over';
+      document.getElementById('odekaki-canvas-fill').getContext('2d').globalCompositeOperation = 'source-over';
     }
     odekakiDrawing = false;
   }
 
-  function getEraserOrDrawCanvas() {
-    if (odekakiTool === 'eraser') {
-      return document.getElementById('odekaki-canvas'); // 線レイヤー代表（塗りレイヤーは onMove で同時消去）
-    }
-    return getDrawCanvas();
-  }
-
-  function applyToolStyle(cx) {
-    if (odekakiTool === 'eraser') {
-      cx.globalCompositeOperation = 'destination-out';
-      cx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
-    } else {
-      cx.globalCompositeOperation = 'source-over';
-      cx.strokeStyle = odekakiColor;
-      cx.lineWidth = ODEKAKI_SIZES[odekakiSize] || 5;
-    }
-  }
-
-  // 消しゴム：塗りレイヤーにも同時適用
-  function eraseOnFill(pos) {
-    if (odekakiTool !== 'eraser') return;
-    const fc = document.getElementById('odekaki-canvas-fill');
-    const fx = fc.getContext('2d');
-    fx.lineCap = 'round'; fx.lineJoin = 'round';
-    fx.globalCompositeOperation = 'destination-out';
-    fx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
-    fx.lineTo(pos.x, pos.y); fx.stroke();
-    fx.beginPath(); fx.moveTo(pos.x, pos.y);
+  function getDrawCanvas() {
+    return document.getElementById(odekakiTool === 'bucket' ? 'odekaki-canvas-fill' : 'odekaki-canvas');
   }
 
   c.addEventListener('mousedown',  onStart);
