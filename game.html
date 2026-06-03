@@ -508,14 +508,18 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <div id="layer-label" style="display:none;position:absolute;top:4px;right:4px;z-index:6;font-size:0.65rem;font-weight:bold;padding:2px 7px;border-radius:10px;background:#e67e22;color:white;">塗りレイヤー</div>
   </div>
 
-  <!-- ツール選択 -->
-  <div style="display:flex;gap:6px;margin-bottom:6px;">
+  <!-- ツール選択 + アンドゥ/リドゥ -->
+  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;justify-content:center;">
     <button id="tool-btn-pen" onclick="setOdekakiTool('pen')"
       style="padding:7px 12px;background:#27ae60;color:white;border:2px solid #27ae60;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;">✏️ ペン</button>
     <button id="tool-btn-bucket" onclick="setOdekakiTool('bucket')"
       style="padding:7px 12px;background:white;color:#27ae60;border:2px solid #27ae60;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;">🪣 ぬる</button>
     <button id="tool-btn-eraser" onclick="setOdekakiTool('eraser')"
       style="padding:7px 12px;background:white;color:#27ae60;border:2px solid #27ae60;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;">🧽 消す</button>
+    <button id="undo-btn" onclick="undoOdekaki()"
+      style="padding:7px 12px;background:white;color:#555;border:2px solid #aaa;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;" disabled>↩ 戻る</button>
+    <button id="redo-btn" onclick="redoOdekaki()"
+      style="padding:7px 12px;background:white;color:#555;border:2px solid #aaa;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;" disabled>↪ 進む</button>
   </div>
 
   <!-- 上級: レイヤー切り替え -->
@@ -1722,6 +1726,8 @@ let odekakiTool    = 'pen';      // 'pen' | 'bucket' | 'eraser'
 let odekakiMode    = 'beginner'; // 'beginner' | 'advanced'
 let odekakiLayer   = 'fill';     // 'fill' | 'line'（上級モード用）
 let odekakiDrawing = false;
+let odekakiUndoStack = []; // { fill: ImageData, line: ImageData }[]
+let odekakiRedoStack = [];
 
 function setOdekakiColor(c) {
   odekakiColor = c;
@@ -1771,6 +1777,7 @@ function setOdekakiLayer(layer) {
 }
 
 function clearOdekakiCanvas() {
+  saveOdekakiSnapshot(); // 全消し前にスナップショット
   const c1 = document.getElementById('odekaki-canvas');
   const c2 = document.getElementById('odekaki-canvas-fill');
   if (c1) c1.getContext('2d').clearRect(0, 0, c1.width, c1.height);
@@ -1779,6 +1786,64 @@ function clearOdekakiCanvas() {
     ctx.clearRect(0, 0, c2.width, c2.height);
     initFillCanvas(); // 白背景を再初期化
   }
+  updateUndoRedoBtns();
+}
+
+// ================================================================
+// アンドゥ / リドゥ
+// ================================================================
+function saveOdekakiSnapshot() {
+  const cf = document.getElementById('odekaki-canvas-fill');
+  const cl = document.getElementById('odekaki-canvas');
+  if (!cf || !cl) return;
+  odekakiUndoStack.push({
+    fill: cf.getContext('2d').getImageData(0, 0, cf.width, cf.height),
+    line: cl.getContext('2d').getImageData(0, 0, cl.width, cl.height)
+  });
+  if (odekakiUndoStack.length > 30) odekakiUndoStack.shift(); // 最大30件
+  odekakiRedoStack = []; // 新操作でリドゥをクリア
+  updateUndoRedoBtns();
+}
+
+function undoOdekaki() {
+  if (odekakiUndoStack.length === 0) return;
+  const cf = document.getElementById('odekaki-canvas-fill');
+  const cl = document.getElementById('odekaki-canvas');
+  // 現在状態をリドゥスタックへ
+  odekakiRedoStack.push({
+    fill: cf.getContext('2d').getImageData(0, 0, cf.width, cf.height),
+    line: cl.getContext('2d').getImageData(0, 0, cl.width, cl.height)
+  });
+  // 1つ前の状態を復元
+  const snap = odekakiUndoStack.pop();
+  cf.getContext('2d').putImageData(snap.fill, 0, 0);
+  cl.getContext('2d').putImageData(snap.line, 0, 0);
+  updateUndoRedoBtns();
+}
+
+function redoOdekaki() {
+  if (odekakiRedoStack.length === 0) return;
+  const cf = document.getElementById('odekaki-canvas-fill');
+  const cl = document.getElementById('odekaki-canvas');
+  // 現在状態をアンドゥスタックへ
+  odekakiUndoStack.push({
+    fill: cf.getContext('2d').getImageData(0, 0, cf.width, cf.height),
+    line: cl.getContext('2d').getImageData(0, 0, cl.width, cl.height)
+  });
+  const snap = odekakiRedoStack.pop();
+  cf.getContext('2d').putImageData(snap.fill, 0, 0);
+  cl.getContext('2d').putImageData(snap.line, 0, 0);
+  updateUndoRedoBtns();
+}
+
+function updateUndoRedoBtns() {
+  const ub = document.getElementById('undo-btn');
+  const rb = document.getElementById('redo-btn');
+  if (!ub || !rb) return;
+  ub.disabled = odekakiUndoStack.length === 0;
+  rb.disabled = odekakiRedoStack.length === 0;
+  ub.style.opacity = ub.disabled ? '0.4' : '1';
+  rb.style.opacity = rb.disabled ? '0.4' : '1';
 }
 
 // 塗りつぶしレイヤーを白い円で初期化
@@ -1977,6 +2042,11 @@ function setupOdekakiCanvas() {
   setOdekakiMode('beginner');
   odekakiColor = '#111111';
 
+  // 履歴リセット
+  odekakiUndoStack = [];
+  odekakiRedoStack = [];
+  updateUndoRedoBtns();
+
   // イベントリセット（クローン差し替え）
   const old = document.getElementById('odekaki-canvas');
   const newC = old.cloneNode(true);
@@ -2006,12 +2076,13 @@ function setupOdekakiCanvas() {
     const pos = getPos(e);
 
     if (odekakiTool === 'bucket') {
-      // バケツ塗り
+      saveOdekakiSnapshot(); // バケツ前にスナップショット
       const fc = getDrawCanvas();
       floodFill(fc, Math.round(pos.x), Math.round(pos.y), odekakiColor);
       return;
     }
 
+    saveOdekakiSnapshot(); // ストローク開始前にスナップショット
     odekakiDrawing = true;
     const dc = getDrawCanvas();
     const cx = dc.getContext('2d');
