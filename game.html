@@ -1900,36 +1900,53 @@ function hexToRgb(hex) {
   return [r, g, b];
 }
 
-function floodFill(canvas, startX, startY, fillHex) {
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const imageData = ctx.getImageData(0, 0, W, H);
-  const data = imageData.data;
+// 塗りつぶし：線レイヤーの線を壁として認識し、塗りレイヤーに色を塗る
+function floodFill(fillCanvas, lineCanvas, startX, startY, fillHex) {
+  const W = fillCanvas.width, H = fillCanvas.height;
+
+  // 塗りキャンバスのデータ（書き込み先）
+  const fillCtx  = fillCanvas.getContext('2d');
+  const fillImgD = fillCtx.getImageData(0, 0, W, H);
+  const fd       = fillImgD.data;
+
+  // 線キャンバスのデータ（壁判定用）
+  const lineCtx  = lineCanvas.getContext('2d');
+  const lineImgD = lineCtx.getImageData(0, 0, W, H);
+  const ld       = lineImgD.data;
+
   const [fr, fg, fb] = hexToRgb(fillHex);
 
   const si = (startY * W + startX) * 4;
-  const tr = data[si], tg = data[si+1], tb = data[si+2], ta = data[si+3];
+  // タップ地点の塗りキャンバス色をターゲット色とする
+  const tr = fd[si], tg = fd[si+1], tb = fd[si+2], ta = fd[si+3];
 
   // すでに同じ色なら終了
   if (tr === fr && tg === fg && tb === fb && ta === 255) return;
 
   const tolerance = 30;
-  function matches(i) {
-    return Math.abs(data[i]-tr) <= tolerance &&
-           Math.abs(data[i+1]-tg) <= tolerance &&
-           Math.abs(data[i+2]-tb) <= tolerance &&
-           Math.abs(data[i+3]-ta) <= tolerance;
+
+  // 線キャンバスに描画がある（アルファ > 50）= 壁（アンチエイリアス込み）
+  function isWall(pi) {
+    return ld[pi+3] > 50;
+  }
+
+  // 塗りキャンバスのピクセルがターゲット色に一致するか
+  function matchesFill(pi) {
+    return Math.abs(fd[pi]  -tr) <= tolerance &&
+           Math.abs(fd[pi+1]-tg) <= tolerance &&
+           Math.abs(fd[pi+2]-tb) <= tolerance &&
+           Math.abs(fd[pi+3]-ta) <= tolerance;
   }
 
   const visited = new Uint8Array(W * H);
-  const stack = [startX + startY * W];
+  const stack   = [startX + startY * W];
   visited[startX + startY * W] = 1;
 
   while (stack.length) {
     const idx = stack.pop();
-    const x = idx % W, y = (idx / W) | 0;
-    const pi = idx * 4;
-    data[pi] = fr; data[pi+1] = fg; data[pi+2] = fb; data[pi+3] = 255;
+    const x   = idx % W, y = (idx / W) | 0;
+    const pi  = idx * 4;
+    fd[pi] = fr; fd[pi+1] = fg; fd[pi+2] = fb; fd[pi+3] = 255;
 
     const neighbors = [idx-1, idx+1, idx-W, idx+W];
     const validX    = [x-1,   x+1,   x,     x    ];
@@ -1939,10 +1956,11 @@ function floodFill(canvas, startX, startY, fillHex) {
       if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
       if (visited[ni]) continue;
       visited[ni] = 1;
-      if (matches(ni * 4)) stack.push(ni);
+      const npi = ni * 4;
+      if (!isWall(npi) && matchesFill(npi)) stack.push(ni);
     }
   }
-  ctx.putImageData(imageData, 0, 0);
+  fillCtx.putImageData(fillImgD, 0, 0);
 }
 
 function updateOdekakiSubmitBtn() {
@@ -2115,8 +2133,9 @@ function setupOdekakiCanvas() {
 
     if (odekakiTool === 'bucket') {
       saveOdekakiSnapshot(); // バケツ前にスナップショット
-      const fc = getDrawCanvas();
-      floodFill(fc, Math.round(pos.x), Math.round(pos.y), odekakiColor);
+      const fc = document.getElementById('odekaki-canvas-fill');
+      const lc = document.getElementById('odekaki-canvas');
+      floodFill(fc, lc, Math.round(pos.x), Math.round(pos.y), odekakiColor);
       return;
     }
 
@@ -2127,6 +2146,16 @@ function setupOdekakiCanvas() {
     cx.lineCap = 'round'; cx.lineJoin = 'round';
     applyToolStyle(cx);
     cx.beginPath(); cx.moveTo(pos.x, pos.y);
+
+    // 初級モード消しゴム：塗りレイヤーのパスも初期化
+    if (odekakiTool === 'eraser' && odekakiMode === 'beginner') {
+      const fc = document.getElementById('odekaki-canvas-fill');
+      const fx = fc.getContext('2d');
+      fx.lineCap = 'round'; fx.lineJoin = 'round';
+      fx.globalCompositeOperation = 'destination-out';
+      fx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
+      fx.beginPath(); fx.moveTo(pos.x, pos.y);
+    }
   }
 
   function onMove(e) {
@@ -2146,6 +2175,10 @@ function setupOdekakiCanvas() {
     if (odekakiDrawing) {
       const dc = getEraserOrDrawCanvas();
       dc.getContext('2d').globalCompositeOperation = 'source-over';
+      // 初級消しゴム：塗りレイヤーのcompositeもリセット
+      if (odekakiTool === 'eraser' && odekakiMode === 'beginner') {
+        document.getElementById('odekaki-canvas-fill').getContext('2d').globalCompositeOperation = 'source-over';
+      }
     }
     odekakiDrawing = false;
   }
