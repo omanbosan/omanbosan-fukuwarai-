@@ -584,7 +584,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 <!-- 図鑑モーダル -->
 <div class="modal-bg" id="zukan-modal">
   <div class="modal-box" style="max-width:480px;">
-    <h2 style="color:#e67e22;">📖 おまんぼさん図鑑</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h2 style="color:#e67e22;margin:0;">📖 おまんぼさん図鑑</h2>
+      <button onclick="refreshZukan()" id="zukan-refresh-btn"
+        style="padding:6px 12px;background:#e67e22;color:white;border:none;border-radius:20px;font-size:0.8rem;cursor:pointer;">🔄 更新</button>
+    </div>
     <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">みんなが生み出したキャラクターたち</p>
     <div id="zukan-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
     <div id="zukan-loading" style="text-align:center;padding:20px;color:#888;font-size:0.9rem;">読み込み中...</div>
@@ -2083,6 +2087,25 @@ async function openZukan() {
   } catch(e) {
     loading.textContent = '読み込みに失敗しました';
   }
+}
+
+async function refreshZukan() {
+  const btn = document.getElementById('zukan-refresh-btn');
+  if (btn) { btn.textContent = '⏳ 更新中...'; btn.disabled = true; }
+  // キャッシュを無効化して再取得
+  zukanCache = null;
+  zukanFetchedAt = 0;
+  zukanPromise = null;
+  const list    = document.getElementById('zukan-list');
+  const loading = document.getElementById('zukan-loading');
+  const empty   = document.getElementById('zukan-empty');
+  loading.style.display = 'block';
+  list.innerHTML = '';
+  prefetchZukan();
+  await zukanPromise;
+  loading.style.display = 'none';
+  renderZukanList(list, empty, zukanCache);
+  if (btn) { btn.textContent = '🔄 更新'; btn.disabled = false; }
 }
 
 function renderZukanList(list, empty, data) {
