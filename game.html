@@ -509,7 +509,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   </div>
 
   <!-- ツール選択 + アンドゥ/リドゥ -->
-  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;justify-content:center;">
+  <div style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;">
     <button id="tool-btn-pen" onclick="setOdekakiTool('pen')"
       style="padding:7px 12px;background:#27ae60;color:white;border:2px solid #27ae60;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;">✏️ ペン</button>
     <button id="tool-btn-bucket" onclick="setOdekakiTool('bucket')"
@@ -517,9 +517,20 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button id="tool-btn-eraser" onclick="setOdekakiTool('eraser')"
       style="padding:7px 12px;background:white;color:#27ae60;border:2px solid #27ae60;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;">🧽 消す</button>
     <button id="undo-btn" onclick="undoOdekaki()"
-      style="padding:7px 12px;background:white;color:#555;border:2px solid #aaa;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;" disabled>↩ 戻る</button>
+      style="padding:7px 12px;background:white;color:#555;border:2px solid #aaa;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;" disabled>↩</button>
     <button id="redo-btn" onclick="redoOdekaki()"
-      style="padding:7px 12px;background:white;color:#555;border:2px solid #aaa;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;" disabled>↪ 進む</button>
+      style="padding:7px 12px;background:white;color:#555;border:2px solid #aaa;border-radius:8px;font-size:0.85rem;font-weight:bold;cursor:pointer;" disabled>↪</button>
+  </div>
+  <!-- 線の太さ -->
+  <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+    <span style="font-size:0.72rem;color:#666;">太さ：</span>
+    <button id="size-btn-thin" onclick="setOdekakiSize('thin')"
+      style="padding:5px 10px;background:#27ae60;color:white;border:2px solid #27ae60;border-radius:8px;font-size:0.8rem;font-weight:bold;cursor:pointer;">細</button>
+    <button id="size-btn-mid" onclick="setOdekakiSize('mid')"
+      style="padding:5px 10px;background:white;color:#27ae60;border:2px solid #27ae60;border-radius:8px;font-size:0.8rem;font-weight:bold;cursor:pointer;">中</button>
+    <button id="size-btn-thick" onclick="setOdekakiSize('thick')"
+      style="padding:5px 10px;background:white;color:#27ae60;border:2px solid #27ae60;border-radius:8px;font-size:0.8rem;font-weight:bold;cursor:pointer;">太</button>
+    <span id="size-preview" style="display:inline-block;background:#333;border-radius:50%;width:4px;height:4px;"></span>
   </div>
 
   <!-- 上級: レイヤー切り替え -->
@@ -1725,9 +1736,27 @@ let odekakiColor   = '#111111';
 let odekakiTool    = 'pen';      // 'pen' | 'bucket' | 'eraser'
 let odekakiMode    = 'beginner'; // 'beginner' | 'advanced'
 let odekakiLayer   = 'fill';     // 'fill' | 'line'（上級モード用）
+let odekakiSize    = 'thin';     // 'thin' | 'mid' | 'thick'
 let odekakiDrawing = false;
 let odekakiUndoStack = []; // { fill: ImageData, line: ImageData }[]
 let odekakiRedoStack = [];
+
+const ODEKAKI_SIZES = { thin: 2, mid: 6, thick: 16 };
+const ERASER_SIZES  = { thin: 10, mid: 22, thick: 40 };
+
+function setOdekakiSize(size) {
+  odekakiSize = size;
+  ['thin','mid','thick'].forEach(s => {
+    const btn = document.getElementById('size-btn-' + s);
+    if (!btn) return;
+    btn.style.background = s === size ? '#27ae60' : 'white';
+    btn.style.color      = s === size ? 'white'   : '#27ae60';
+  });
+  // プレビュードット更新
+  const px = { thin: 4, mid: 10, thick: 18 };
+  const prev = document.getElementById('size-preview');
+  if (prev) { prev.style.width = px[size]+'px'; prev.style.height = px[size]+'px'; }
+}
 
 function setOdekakiColor(c) {
   odekakiColor = c;
@@ -2040,6 +2069,7 @@ function setupOdekakiCanvas() {
   // ツール・モードを初期状態に
   setOdekakiTool('pen');
   setOdekakiMode('beginner');
+  setOdekakiSize('thin');
   odekakiColor = '#111111';
 
   // 履歴リセット
@@ -2084,37 +2114,20 @@ function setupOdekakiCanvas() {
 
     saveOdekakiSnapshot(); // ストローク開始前にスナップショット
     odekakiDrawing = true;
-    const dc = getDrawCanvas();
+    const dc = getEraserOrDrawCanvas();
     const cx = dc.getContext('2d');
     cx.lineCap = 'round'; cx.lineJoin = 'round';
-
-    if (odekakiTool === 'eraser') {
-      cx.globalCompositeOperation = 'destination-out';
-      cx.lineWidth = 24;
-    } else {
-      cx.globalCompositeOperation = 'source-over';
-      cx.strokeStyle = odekakiColor;
-      cx.lineWidth = 5;
-    }
+    applyToolStyle(cx);
     cx.beginPath(); cx.moveTo(pos.x, pos.y);
-    cx._lastPos = pos;
   }
 
   function onMove(e) {
     e.preventDefault();
     if (!odekakiDrawing || odekakiTool === 'bucket') return;
     const pos = getPos(e);
-    const dc = getDrawCanvas();
+    const dc = getEraserOrDrawCanvas();
     const cx = dc.getContext('2d');
-
-    if (odekakiTool === 'eraser') {
-      cx.globalCompositeOperation = 'destination-out';
-      cx.lineWidth = 24;
-    } else {
-      cx.globalCompositeOperation = 'source-over';
-      cx.strokeStyle = odekakiColor;
-      cx.lineWidth = 5;
-    }
+    applyToolStyle(cx);
     cx.lineTo(pos.x, pos.y); cx.stroke();
     cx.beginPath(); cx.moveTo(pos.x, pos.y);
   }
@@ -2122,10 +2135,29 @@ function setupOdekakiCanvas() {
   function onEnd(e) {
     e.preventDefault();
     if (odekakiDrawing) {
-      const dc = getDrawCanvas();
+      const dc = getEraserOrDrawCanvas();
       dc.getContext('2d').globalCompositeOperation = 'source-over';
     }
     odekakiDrawing = false;
+  }
+
+  // 消しゴムは常に線レイヤーへ（塗りレイヤーの白背景を守る）
+  function getEraserOrDrawCanvas() {
+    if (odekakiTool === 'eraser') {
+      return document.getElementById('odekaki-canvas'); // 常に線レイヤー
+    }
+    return getDrawCanvas();
+  }
+
+  function applyToolStyle(cx) {
+    if (odekakiTool === 'eraser') {
+      cx.globalCompositeOperation = 'destination-out';
+      cx.lineWidth = ERASER_SIZES[odekakiSize] || 22;
+    } else {
+      cx.globalCompositeOperation = 'source-over';
+      cx.strokeStyle = odekakiColor;
+      cx.lineWidth = ODEKAKI_SIZES[odekakiSize] || 5;
+    }
   }
 
   c.addEventListener('mousedown',  onStart);
