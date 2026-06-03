@@ -110,6 +110,26 @@ body {
   border: none; border-radius: 8px; font-size: 0.85rem;
   cursor: pointer;
 }
+.btn-flag {
+  width: 100%; padding: 8px; margin-top: 6px;
+  border: none; border-radius: 8px; font-size: 0.85rem;
+  cursor: pointer; transition: background 0.2s;
+  background: #ecf0f1; color: #555;
+}
+.btn-flag.flagged { background: #e67e22; color: white; }
+.flag-bar {
+  background: rgba(230,126,34,0.15);
+  border: 1.5px solid #e67e22;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  color: #e67e22;
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: none;
+  text-align: center;
+}
+.card.flagged { border-color: #e67e22 !important; }
 
 #loading { text-align: center; padding: 40px; color: #888; font-size: 1rem; }
 #empty   { text-align: center; padding: 40px; color: #666; font-size: 0.9rem; display: none; }
@@ -209,6 +229,7 @@ async function loadData() {
   try {
     const res  = await fetch(WEBHOOK_URL + '?type=pending');
     allData = await res.json();
+    applyFlags(); // localStorageのフラグをマージ
     updateBadges();
     renderCards();
   } catch(e) {
@@ -254,12 +275,16 @@ function renderCards() {
     const statusClass = { '審査中': 'pending', '承認済み': 'approved', '却下': 'rejected' };
     const statusLabel = { '審査中': '⏳ 審査中', '承認済み': '✅ 承認済み', '却下': '❌ 却下' };
     const approved = entry.approved || '審査中';
+    const isFlagged = !!entry.flagged;
 
     const card = document.createElement('div');
-    card.className = 'card ' + (statusClass[approved] || 'pending');
+    card.className = 'card ' + (statusClass[approved] || 'pending') + (isFlagged ? ' flagged' : '');
     card.id = 'card-' + entry.row;
 
     card.innerHTML = `
+      <div class="flag-bar" id="flagbar-${entry.row}" style="${isFlagged ? 'display:block' : ''}">
+        🚦 要確認フラグが立っています
+      </div>
       ${entry.imageUrl
         ? `<img class="card-img" src="${entry.imageUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : ''}
@@ -274,6 +299,10 @@ function renderCards() {
         ${approved !== '却下'    ? `<button class="btn-reject"  onclick="setStatus(${entry.row},'却下')">❌ 却下</button>` : ''}
         ${approved !== '審査中'  ? `<button class="btn-undo"    onclick="setStatus(${entry.row},'審査中')">↩ 審査中に戻す</button>` : ''}
       </div>
+      <button class="btn-flag ${isFlagged ? 'flagged' : ''}" id="flagbtn-${entry.row}"
+        onclick="toggleFlag(${entry.row})">
+        ${isFlagged ? '🚦 要確認フラグを解除' : '🚦 要確認フラグをつける'}
+      </button>
     `;
     grid.appendChild(card);
   });
@@ -300,6 +329,58 @@ async function setStatus(row, status) {
       body: JSON.stringify({ type: 'setApproval', row, status })
     });
   } catch(e) {}
+}
+
+// ================================================================
+// 要確認フラグ（ローカルで管理）
+// ================================================================
+// フラグはlocalStorageに保存（GASへの書き込みなし・管理者端末のみ）
+function getFlags() {
+  try { return JSON.parse(localStorage.getItem('omanbo_flags') || '{}'); } catch(e) { return {}; }
+}
+function saveFlags(flags) {
+  localStorage.setItem('omanbo_flags', JSON.stringify(flags));
+}
+
+function toggleFlag(row) {
+  const flags = getFlags();
+  const entry = allData.find(r => r.row === row);
+  if (!entry) return;
+
+  if (flags[row]) {
+    delete flags[row];
+    entry.flagged = false;
+  } else {
+    flags[row] = true;
+    entry.flagged = true;
+  }
+  saveFlags(flags);
+
+  // UI更新
+  const card = document.getElementById('card-' + row);
+  const bar  = document.getElementById('flagbar-' + row);
+  const btn  = document.getElementById('flagbtn-' + row);
+  if (entry.flagged) {
+    card.classList.add('flagged');
+    bar.style.display  = 'block';
+    btn.classList.add('flagged');
+    btn.textContent = '🚦 要確認フラグを解除';
+    showToast('🚦 要確認フラグをつけました');
+  } else {
+    card.classList.remove('flagged');
+    bar.style.display  = 'none';
+    btn.classList.remove('flagged');
+    btn.textContent = '🚦 要確認フラグをつける';
+    showToast('フラグを解除しました');
+  }
+}
+
+// データ読み込み後にlocalStorageのフラグをマージ
+function applyFlags() {
+  const flags = getFlags();
+  allData.forEach(entry => {
+    entry.flagged = !!flags[entry.row];
+  });
 }
 
 // ================================================================
