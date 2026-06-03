@@ -569,7 +569,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <div style="font-size:0.85rem;font-weight:bold;color:#27ae60;margin-bottom:8px;">📖 図鑑に登録する（必須）</div>
 
     <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">🏷️ この村人の名前（必須・最大10文字）</div>
-    <input type="text" id="odekaki-name" placeholder="例: もじゃおまんぼ" maxlength="10"
+    <input type="text" id="odekaki-name" placeholder="" maxlength="10"
       style="width:100%;padding:8px;border:2px solid #e67e22;border-radius:6px;font-size:0.95rem;margin-bottom:8px;box-sizing:border-box;font-weight:bold;"
       oninput="updateOdekakiSubmitBtn()">
 
@@ -1904,9 +1904,23 @@ function floodFill(fillCanvas, lineCanvas, startX, startY, fillHex) {
 
   const tolerance = 30;
 
-  // 線キャンバスに描画がある（アルファ > 50）= 壁（アンチエイリアス込み）
-  function isWall(pi) {
-    return ld[pi+3] > 50;
+  // ── 壁マスクを生成（線キャンバスを1px膨張させてアンチエイリアス隙間を埋める） ──
+  const wall = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    if (ld[i * 4 + 3] > 15) wall[i] = 1; // 閾値を低めに設定
+  }
+  // 8方向に1px膨張（斜め方向の隙間も塞ぐ）
+  const wallDilated = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (!wall[y * W + x]) continue;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx >= 0 && nx < W && ny >= 0 && ny < H) wallDilated[ny * W + nx] = 1;
+        }
+      }
+    }
   }
 
   // 塗りキャンバスのピクセルがターゲット色に一致するか
@@ -1936,7 +1950,7 @@ function floodFill(fillCanvas, lineCanvas, startX, startY, fillHex) {
       if (visited[ni]) continue;
       visited[ni] = 1;
       const npi = ni * 4;
-      if (!isWall(npi) && matchesFill(npi)) stack.push(ni);
+      if (!wallDilated[ni] && matchesFill(npi)) stack.push(ni);
     }
   }
   fillCtx.putImageData(fillImgD, 0, 0);
