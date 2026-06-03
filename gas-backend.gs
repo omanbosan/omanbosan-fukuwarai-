@@ -23,7 +23,8 @@ function doGet(e) {
     if (type === 'ranking') return buildResponse(getRanking());
     if (type === 'archive') return buildResponse(getLastMonthRanking());
     if (type === 'zukan')   return buildResponse(getZukan());
-    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.6' });
+    if (type === 'pending') return buildResponse(getPending());
+    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.7' });
   } catch(err) {
     return buildResponse({ error: err.message });
   }
@@ -35,8 +36,9 @@ function doGet(e) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    if (data.type === 'score')   return buildResponse(saveScore(data));
-    if (data.type === 'drawing') return buildResponse(saveDrawing(data));
+    if (data.type === 'score')      return buildResponse(saveScore(data));
+    if (data.type === 'drawing')    return buildResponse(saveDrawing(data));
+    if (data.type === 'setApproval') return buildResponse(setApproval(data));
     return buildResponse({ ok: true });
   } catch(err) {
     return buildResponse({ error: err.message });
@@ -98,6 +100,40 @@ function saveScore(data) {
     (data.instagram || '').replace('@', '')
   ]);
   return { ok: true };
+}
+
+// ----------------------------------------------------------------
+// 審査中一覧取得（管理画面用）
+// ----------------------------------------------------------------
+function getPending() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('drawings');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
+    .map((r, i) => ({
+      row:         i + 2,
+      instagram:   (r[0] || '').replace('@', ''),
+      date:        r[1] ? String(r[1]).slice(0, 10) : '',
+      imageUrl:    driveUrlToThumb(r[2]),
+      villageName: r[4] || '',
+      comment:     r[5] || '',
+      approved:    r[7] || '審査中'
+    }))
+    .filter(r => r.villageName);
+}
+
+// ----------------------------------------------------------------
+// 承認・却下（管理画面用）
+// ----------------------------------------------------------------
+function setApproval(data) {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('drawings');
+  if (!sheet) return { error: 'no sheet' };
+  const row    = Number(data.row);
+  const status = data.status === '承認済み' ? '承認済み' : '却下';
+  sheet.getRange(row, 8).setValue(status);
+  return { ok: true, row, status };
 }
 
 // ----------------------------------------------------------------

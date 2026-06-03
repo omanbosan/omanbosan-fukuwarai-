@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<!-- おまんぼさんイラストゲーム 管理画面 v1.0 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>管理画面 - おまんぼさん図鑑</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1a1a2e;
+  font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  min-height: 100vh;
+  color: #eee;
+}
+
+/* ログイン画面 */
+#login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 20px;
+}
+.login-box {
+  background: #16213e; border-radius: 16px; padding: 36px 28px;
+  width: 100%; max-width: 340px; text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.login-box h1 { font-size: 1.2rem; color: #e67e22; margin-bottom: 6px; }
+.login-box p  { font-size: 0.8rem; color: #888; margin-bottom: 24px; }
+.login-box input {
+  width: 100%; padding: 12px; border: 2px solid #333; border-radius: 8px;
+  background: #0f3460; color: white; font-size: 1rem; text-align: center;
+  letter-spacing: 4px; outline: none; margin-bottom: 14px;
+}
+.login-box input:focus { border-color: #e67e22; }
+.login-box button {
+  width: 100%; padding: 12px; background: #e67e22; color: white;
+  border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
+}
+.login-box button:hover { background: #d35400; }
+.login-err { color: #e74c3c; font-size: 0.8rem; margin-top: 8px; min-height: 18px; }
+
+/* 管理画面 */
+#admin-screen { display: none; padding: 16px; }
+.admin-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #16213e; border-radius: 12px; padding: 12px 16px;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+}
+.admin-header h2 { font-size: 1.1rem; color: #e67e22; }
+.tab-bar { display: flex; gap: 6px; }
+.tab-btn {
+  padding: 7px 14px; border: none; border-radius: 20px; font-size: 0.85rem;
+  cursor: pointer; font-weight: bold; transition: all 0.2s;
+  background: #0f3460; color: #aaa;
+}
+.tab-btn.active { background: #e67e22; color: white; }
+.reload-btn {
+  padding: 7px 14px; background: #27ae60; color: white;
+  border: none; border-radius: 20px; font-size: 0.85rem; cursor: pointer;
+}
+
+/* カードグリッド */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.card {
+  background: #16213e; border-radius: 14px; padding: 16px;
+  border: 2px solid #2a2a4a; transition: border 0.2s;
+}
+.card.pending  { border-color: #f39c12; }
+.card.approved { border-color: #27ae60; }
+.card.rejected { border-color: #e74c3c; opacity: 0.6; }
+
+.card-img {
+  width: 120px; height: 120px; border-radius: 50%;
+  object-fit: cover; display: block; margin: 0 auto 12px;
+  background: #0f3460;
+}
+.card-img-placeholder {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: #0f3460; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px; font-size: 2.5rem;
+}
+.card-name    { font-size: 1.1rem; font-weight: bold; color: #f39c12; text-align: center; margin-bottom: 4px; }
+.card-comment { font-size: 0.8rem; color: #aaa; text-align: center; margin-bottom: 4px; }
+.card-ig      { font-size: 0.75rem; color: #888; text-align: center; margin-bottom: 4px; }
+.card-date    { font-size: 0.7rem; color: #666; text-align: center; margin-bottom: 12px; }
+.card-status  { text-align: center; font-size: 0.78rem; font-weight: bold; margin-bottom: 10px; }
+.status-pending  { color: #f39c12; }
+.status-approved { color: #27ae60; }
+.status-rejected { color: #e74c3c; }
+
+.btn-row { display: flex; gap: 8px; }
+.btn-approve {
+  flex: 1; padding: 10px; background: #27ae60; color: white;
+  border: none; border-radius: 8px; font-size: 0.9rem; font-weight: bold;
+  cursor: pointer; transition: background 0.2s;
+}
+.btn-approve:hover { background: #219a52; }
+.btn-reject {
+  flex: 1; padding: 10px; background: #e74c3c; color: white;
+  border: none; border-radius: 8px; font-size: 0.9rem; font-weight: bold;
+  cursor: pointer; transition: background 0.2s;
+}
+.btn-reject:hover { background: #c0392b; }
+.btn-undo {
+  flex: 1; padding: 10px; background: #7f8c8d; color: white;
+  border: none; border-radius: 8px; font-size: 0.85rem;
+  cursor: pointer;
+}
+
+#loading { text-align: center; padding: 40px; color: #888; font-size: 1rem; }
+#empty   { text-align: center; padding: 40px; color: #666; font-size: 0.9rem; display: none; }
+
+/* バッジ */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: bold; margin-left: 6px;
+}
+.badge-pending  { background: #f39c12; color: #000; }
+.badge-approved { background: #27ae60; color: #fff; }
+.badge-rejected { background: #e74c3c; color: #fff; }
+
+/* toast */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #27ae60; color: white; padding: 10px 20px; border-radius: 20px;
+  font-size: 0.9rem; font-weight: bold; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; white-space: nowrap; z-index: 9999;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ログイン -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:2rem;margin-bottom:10px;">🔐</div>
+    <h1>管理者ログイン</h1>
+    <p>おまんぼさん図鑑 承認管理</p>
+    <input type="password" id="admin-pw" placeholder="管理者パスワード" autofocus
+      onkeydown="if(event.key==='Enter')adminLogin()">
+    <button onclick="adminLogin()">ログイン →</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- 管理画面 -->
+<div id="admin-screen">
+  <div class="admin-header">
+    <h2>📖 図鑑 承認管理</h2>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-pending"  onclick="switchTab('pending')">
+          審査中 <span class="badge badge-pending"  id="cnt-pending">0</span>
+        </button>
+        <button class="tab-btn"        id="tab-approved" onclick="switchTab('approved')">
+          承認済み <span class="badge badge-approved" id="cnt-approved">0</span>
+        </button>
+        <button class="tab-btn"        id="tab-rejected" onclick="switchTab('rejected')">
+          却下 <span class="badge badge-rejected" id="cnt-rejected">0</span>
+        </button>
+      </div>
+      <button class="reload-btn" onclick="loadData()">🔄 更新</button>
+    </div>
+  </div>
+
+  <div id="loading">読み込み中...</div>
+  <div id="empty">該当する村人がいません</div>
+  <div class="card-grid" id="card-grid"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycby0q8MVbN-Dk_fio8XOAqZW4XnxJC4_RNw4__XQOt57RgQUfAEjqkirPBHCHlZ30D4JoA/exec';
+const ADMIN_PW    = 'omanbo_admin'; // ← 管理者パスワード（変更推奨）
+
+let allData   = [];
+let currentTab = 'pending';
+
+// ================================================================
+// ログイン
+// ================================================================
+function adminLogin() {
+  const val = document.getElementById('admin-pw').value;
+  if (val === ADMIN_PW) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    loadData();
+  } else {
+    const err = document.getElementById('login-err');
+    err.textContent = 'パスワードが違います';
+    document.getElementById('admin-pw').value = '';
+    setTimeout(() => err.textContent = '', 2000);
+  }
+}
+
+// ================================================================
+// データ取得
+// ================================================================
+async function loadData() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('card-grid').innerHTML = '';
+  document.getElementById('empty').style.display = 'none';
+  try {
+    const res  = await fetch(WEBHOOK_URL + '?type=pending');
+    allData = await res.json();
+    updateBadges();
+    renderCards();
+  } catch(e) {
+    document.getElementById('loading').textContent = '読み込みに失敗しました。再度お試しください。';
+  }
+}
+
+function updateBadges() {
+  document.getElementById('cnt-pending').textContent  = allData.filter(r => (r.approved||'審査中') === '審査中').length;
+  document.getElementById('cnt-approved').textContent = allData.filter(r => r.approved === '承認済み').length;
+  document.getElementById('cnt-rejected').textContent = allData.filter(r => r.approved === '却下').length;
+}
+
+// ================================================================
+// タブ切り替え
+// ================================================================
+function switchTab(tab) {
+  currentTab = tab;
+  ['pending','approved','rejected'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+  });
+  renderCards();
+}
+
+// ================================================================
+// カード描画
+// ================================================================
+function renderCards() {
+  document.getElementById('loading').style.display = 'none';
+  const grid = document.getElementById('card-grid');
+  grid.innerHTML = '';
+
+  const tabStatus = { pending: '審査中', approved: '承認済み', rejected: '却下' };
+  const filtered = allData.filter(r => (r.approved || '審査中') === tabStatus[currentTab]);
+
+  if (filtered.length === 0) {
+    document.getElementById('empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('empty').style.display = 'none';
+
+  filtered.forEach(entry => {
+    const statusClass = { '審査中': 'pending', '承認済み': 'approved', '却下': 'rejected' };
+    const statusLabel = { '審査中': '⏳ 審査中', '承認済み': '✅ 承認済み', '却下': '❌ 却下' };
+    const approved = entry.approved || '審査中';
+
+    const card = document.createElement('div');
+    card.className = 'card ' + (statusClass[approved] || 'pending');
+    card.id = 'card-' + entry.row;
+
+    card.innerHTML = `
+      ${entry.imageUrl
+        ? `<img class="card-img" src="${entry.imageUrl}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : ''}
+      <div class="card-img-placeholder" style="${entry.imageUrl ? 'display:none' : ''}">🎨</div>
+      <div class="card-name">${entry.villageName || '（名前なし）'}</div>
+      ${entry.comment ? `<div class="card-comment">「${entry.comment}」</div>` : ''}
+      <div class="card-ig">@${entry.instagram}</div>
+      <div class="card-date">${entry.date}</div>
+      <div class="card-status status-${statusClass[approved]}">${statusLabel[approved]}</div>
+      <div class="btn-row">
+        ${approved !== '承認済み' ? `<button class="btn-approve" onclick="setStatus(${entry.row},'承認済み')">✅ 承認</button>` : ''}
+        ${approved !== '却下'    ? `<button class="btn-reject"  onclick="setStatus(${entry.row},'却下')">❌ 却下</button>` : ''}
+        ${approved !== '審査中'  ? `<button class="btn-undo"    onclick="setStatus(${entry.row},'審査中')">↩ 審査中に戻す</button>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ================================================================
+// 承認・却下
+// ================================================================
+async function setStatus(row, status) {
+  // UIをすぐ更新
+  const entry = allData.find(r => r.row === row);
+  if (entry) entry.approved = status;
+  updateBadges();
+  renderCards();
+
+  const labels = { '承認済み': '✅ 承認しました！', '却下': '❌ 却下しました', '審査中': '↩ 審査中に戻しました' };
+  showToast(labels[status] || '更新しました');
+
+  // GASに送信
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'setApproval', row, status })
+    });
+  } catch(e) {}
+}
+
+// ================================================================
+// Toast通知
+// ================================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
