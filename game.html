@@ -1702,13 +1702,16 @@ async function saveOdekakiImage() {
   const out = document.createElement('canvas');
   out.width = 300; out.height = 300;
   const ctx = out.getContext('2d');
-  // 円形にクリップして描画（輪郭は1本のみ）
+  // 円形にクリップして描画
   ctx.save();
-  ctx.beginPath(); ctx.arc(150,150,149,0,Math.PI*2); ctx.clip();
+  ctx.beginPath(); ctx.arc(150,150,148,0,Math.PI*2); ctx.clip();
   ctx.fillStyle = 'white';
   ctx.fillRect(0,0,300,300);
   ctx.drawImage(canvas, 0, 0);
   ctx.restore();
+  // clipの外側に輪郭を1本だけ描く
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(150,150,148,0,Math.PI*2); ctx.stroke();
   const dataUrl = out.toDataURL('image/png');
 
   // 長押し保存用の画像を表示（スマホはこれで保存）
