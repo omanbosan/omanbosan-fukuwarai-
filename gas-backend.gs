@@ -110,7 +110,7 @@ function getPending() {
   const sheet = ss.getSheetByName('drawings');
   if (!sheet || sheet.getLastRow() < 2) return [];
 
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues()
     .map((r, i) => ({
       row:         i + 2,
       instagram:   (r[0] || '').replace('@', ''),
@@ -118,7 +118,9 @@ function getPending() {
       imageUrl:    driveUrlToThumb(r[2]),
       villageName: r[4] || '',
       comment:     r[5] || '',
-      approved:    r[7] || '審査中'
+      approved:    r[7] || '審査中',
+      penname:     r[8] || '',
+      igShow:      r[9] === true || r[9] === 'TRUE'
     }))
     .filter(r => r.villageName);
 }
@@ -154,18 +156,20 @@ function getZukan() {
   const sheet = ss.getSheetByName('drawings');
   if (!sheet || sheet.getLastRow() < 2) return [];
 
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
-    .map((r, i) => ({
-      no:          i + 1,
-      instagram:   (r[0] || '').replace('@', ''),
-      date:        r[1] ? String(r[1]).slice(0, 10) : '',
-      imageUrl:    driveUrlToThumb(r[2]),
-      villageName: r[4] || '',
-      comment:     r[5] || '',
-      approved:    r[7] || ''
-    }))
-    .filter(r => r.villageName && r.approved === '承認済み')
-    .reverse(); // 新しい順
+  const approved = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues()
+    .filter(r => (r[4] || '') && (r[7] || '') === '承認済み');
+
+  // 承認済みのみを連番付与（却下分で番号が飛ばないように）
+  return approved.map((r, i) => ({
+    no:          i + 1,                          // 連番（承認済みのみカウント）
+    instagram:   (r[0] || '').replace('@', ''),
+    date:        r[1] ? String(r[1]).slice(0, 10) : '',
+    imageUrl:    driveUrlToThumb(r[2]),
+    villageName: r[4] || '',
+    comment:     r[5] || '',
+    penname:     r[8] || '',
+    igShow:      r[9] === true || r[9] === 'TRUE'
+  })).reverse(); // 新しい順
 }
 
 // ----------------------------------------------------------------
@@ -173,9 +177,11 @@ function getZukan() {
 // ----------------------------------------------------------------
 function saveDrawing(data) {
   if (!data.image) return { error: 'no image data' };
-  const ig          = String(data.instagram   || 'anonymous').replace('@', '');
+  const ig          = String(data.instagram   || '').replace('@', '');
   const villageName = String(data.villageName || '').slice(0, 10);
+  const penname     = String(data.penname     || '').slice(0, 15);
   const comment     = String(data.comment     || '').slice(0, 20);
+  const igShow      = data.igShow === true || data.igShow === 'true';
 
   // 1. シートに仮記録（Drive保存前でも記録が残るように）
   const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
@@ -191,18 +197,22 @@ function saveDrawing(data) {
   if (colCount < 6) sheet.getRange(1, 6).setValue('ひとこと');
   if (colCount < 7) sheet.getRange(1, 7).setValue('図鑑No');
   if (colCount < 8) sheet.getRange(1, 8).setValue('承認');
+  if (colCount < 9) sheet.getRange(1, 9).setValue('ペンネーム');
+  if (colCount < 10) sheet.getRange(1, 10).setValue('IG表示');
 
   const zukanNo  = Math.max(sheet.getLastRow(), 1);
   const rowIndex = sheet.getLastRow() + 1;
   sheet.appendRow([
-    '@' + ig,
+    ig ? '@' + ig : '',
     new Date().toLocaleString('ja-JP'),
     'Drive保存中...',
     '未送信',
     villageName,
     comment,
     zukanNo,
-    '審査中'  // ← デフォルトは審査中。承認済み にすると図鑑に表示
+    '審査中',
+    penname,
+    igShow
   ]);
 
   // 2. Drive に保存

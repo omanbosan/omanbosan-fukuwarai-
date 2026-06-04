@@ -189,6 +189,18 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   #mode-bar { width: 100%; }
   .mode-btn { flex: 1; }
 }
+@keyframes opening-pulse {
+  0%,100% { transform: scale(1); filter: drop-shadow(0 0 20px #e67e22); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 35px #f39c12); }
+}
+@keyframes opening-btn-pulse {
+  0%,100% { box-shadow: 0 4px 20px rgba(230,126,34,0.6); }
+  50% { box-shadow: 0 4px 35px rgba(243,156,18,0.9); }
+}
+@keyframes star-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity:1; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity:0; }
+}
 </style>
 <script>
   if (!sessionStorage.getItem('fwAuth')) location.replace('index.html');
@@ -269,125 +281,152 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   </div>
 </div>
 
-<!-- モード選択オーバーレイ -->
-<div id="how-to-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,1);z-index:900;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:20px 16px;color:white;text-align:center;">
-  <div style="font-size:1.5rem;font-weight:bold;margin-bottom:4px;">🎨 おまんぼさんイラストゲーム</div>
-  <div style="font-size:0.85rem;color:#ddd;margin-bottom:14px;">遊び方を選んでスタート！</div>
+<div id="opening-screen" style="position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#1a0a00 0%,#3d1a00 40%,#1a0a00 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;text-align:center;padding:24px;overflow:hidden;">
+  <!-- 背景の星パーティクル -->
+  <div id="opening-stars" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+  <!-- ロゴ -->
+  <div style="position:relative;z-index:2;margin-bottom:12px;">
+    <div style="font-size:5rem;line-height:1;filter:drop-shadow(0 0 20px #e67e22);animation:opening-pulse 2s ease-in-out infinite;">🎨</div>
+  </div>
+  <div style="position:relative;z-index:2;">
+    <div style="font-size:1.6rem;font-weight:bold;letter-spacing:0.1em;color:#f39c12;text-shadow:0 0 20px #e67e22,0 0 40px #e67e22;margin-bottom:6px;">おまんぼさん</div>
+    <div style="font-size:1.1rem;font-weight:bold;color:#fff;margin-bottom:4px;">イラストゲーム</div>
+    <div style="font-size:0.78rem;color:#aaa;margin-bottom:32px;letter-spacing:0.05em;">OMANBO ILLUST GAME</div>
+    <button onclick="closeOpeningScreen()" style="padding:16px 48px;background:linear-gradient(135deg,#e67e22,#f39c12);color:white;border:none;border-radius:50px;font-size:1.1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 20px rgba(230,126,34,0.6);letter-spacing:0.1em;animation:opening-btn-pulse 1.5s ease-in-out infinite;">
+      ▶ はじめる
+    </button>
+    <div style="font-size:0.72rem;color:#888;margin-top:16px;">タップして始める</div>
+  </div>
+</div>
 
-  <div style="background:rgba(230,126,34,0.2);border:1px solid rgba(230,126,34,0.5);border-radius:12px;padding:14px;margin-bottom:12px;width:100%;text-align:left;">
-    <div style="font-size:1rem;font-weight:bold;color:#f39c12;margin-bottom:6px;">① 採点チャレンジ ✏️</div>
-    <div style="font-size:0.82rem;line-height:1.7;">
+<!-- モード選択オーバーレイ -->
+<div id="how-to-overlay" style="position:fixed;inset:0;background:linear-gradient(160deg,#1a0a00 0%,#2d1200 35%,#1a2000 70%,#001a0d 100%);z-index:900;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding:20px 16px;color:white;text-align:center;">
+
+  <!-- ヘッダー -->
+  <div style="margin-bottom:20px;padding-top:8px;">
+    <div style="font-size:0.75rem;color:#e67e22;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:4px;">OMANBO ILLUST GAME</div>
+    <div style="font-size:1.6rem;font-weight:bold;background:linear-gradient(90deg,#f39c12,#e67e22,#f1c40f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">おまんぼさん</div>
+    <div style="font-size:0.95rem;color:#ddd;margin-top:2px;">イラストゲーム</div>
+  </div>
+
+  <!-- 採点チャレンジカード -->
+  <div style="background:linear-gradient(135deg,rgba(230,126,34,0.25) 0%,rgba(192,57,43,0.2) 100%);border:1.5px solid rgba(230,126,34,0.6);border-radius:16px;padding:16px;margin-bottom:14px;width:100%;text-align:left;box-shadow:0 4px 20px rgba(230,126,34,0.2);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="font-size:2rem;">🎯</div>
+      <div>
+        <div style="font-size:1.05rem;font-weight:bold;color:#f39c12;">採点チャレンジ</div>
+        <div style="font-size:0.72rem;color:#f39c12;opacity:0.8;">SCORING CHALLENGE</div>
+      </div>
+    </div>
+    <div style="font-size:0.82rem;line-height:1.7;color:#eee;margin-bottom:12px;">
       おまんぼさんの顔を覚えて、目隠し状態でフリーハンド描画！<br>
       見本との重なり具合で採点します。（100点満点）
     </div>
-    <div style="margin-top:10px;font-size:0.8rem;line-height:2.1;background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px;">
-      🏆 <b>特賞</b>（95点以上）：スペシャルプレゼント<br>
-      🥇 <b>1等賞</b>（80点以上）：銘木キーホルダー<br>
-      🥈 <b>2等賞</b>（65点以上）：レザー調キーホルダー<br>
-      🥉 <b>3等賞</b>（50点以上）：ショッピング500円オフクーポン
+    <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:10px;font-size:0.8rem;line-height:2.2;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
+        <span>🏆 <b style="color:#ffd700;">特賞</b></span><span style="color:#ffd700;font-size:0.75rem;">95点以上</span><span style="font-size:0.72rem;color:#aaa;">スペシャルプレゼント</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
+        <span>🥇 <b style="color:#f39c12;">1等賞</b></span><span style="color:#f39c12;font-size:0.75rem;">80点以上</span><span style="font-size:0.72rem;color:#aaa;">銘木キーホルダー</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
+        <span>🥈 <b style="color:#bdc3c7;">2等賞</b></span><span style="color:#bdc3c7;font-size:0.75rem;">65点以上</span><span style="font-size:0.72rem;color:#aaa;">レザー調キーホルダー</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
+        <span>🥉 <b style="color:#cd6133;">3等賞</b></span><span style="color:#cd6133;font-size:0.75rem;">50点以上</span><span style="font-size:0.72rem;color:#aaa;">500円オフクーポン</span>
+      </div>
     </div>
+    <button onclick="selectModeAndStart('scoring')" style="margin-top:14px;width:100%;padding:14px;background:linear-gradient(135deg,#e67e22,#c0392b);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.4);letter-spacing:0.05em;">
+      🎯 採点チャレンジをはじめる →
+    </button>
   </div>
 
-  <div style="background:rgba(39,174,96,0.2);border:1px solid rgba(39,174,96,0.5);border-radius:12px;padding:14px;margin-bottom:16px;width:100%;text-align:left;">
-    <div style="font-size:1rem;font-weight:bold;color:#2ecc71;margin-bottom:6px;">② お絵描きチャレンジ 🖌️</div>
-    <div style="font-size:0.85rem;line-height:1.8;margin-bottom:10px;">
-      おまんぼさんの顔を自由に描いて<b>キャラクターとして図鑑に登録</b>しよう！<br>
+  <!-- お絵描きチャレンジカード -->
+  <div style="background:linear-gradient(135deg,rgba(39,174,96,0.25) 0%,rgba(21,132,70,0.2) 100%);border:1.5px solid rgba(39,174,96,0.6);border-radius:16px;padding:16px;margin-bottom:14px;width:100%;text-align:left;box-shadow:0 4px 20px rgba(39,174,96,0.2);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="font-size:2rem;">🎨</div>
+      <div>
+        <div style="font-size:1.05rem;font-weight:bold;color:#2ecc71;">お絵描きチャレンジ</div>
+        <div style="font-size:0.72rem;color:#2ecc71;opacity:0.8;">DRAWING CHALLENGE</div>
+      </div>
+    </div>
+    <div style="font-size:0.82rem;line-height:1.7;color:#eee;margin-bottom:10px;">
+      おまんぼさんの顔を自由に描いて<b style="color:#a8e6cf;">キャラクターとして図鑑に登録</b>しよう！<br>
       描いた顔に名前をつけると、あなたオリジナルのキャラクターが誕生。<br>
-      個性豊かな顔がどんどん増えていく…その中に<b>本物のおまんぼさん</b>が隠れているかも？🔍
+      個性豊かな顔がどんどん増えていく…その中に<b style="color:#a8e6cf;">本物のおまんぼさん</b>が隠れているかも？🔍
     </div>
 
-    <!-- フロー図 -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:10px;flex-wrap:wrap;">
-      <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#fff;line-height:1.5;min-width:58px;">
-        🎨<br>顔を描く
-      </div>
-      <div style="color:#aaa;font-size:1rem;">→</div>
-      <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#fff;line-height:1.5;min-width:58px;">
-        🏷️<br>名前をつける
-      </div>
-      <div style="color:#aaa;font-size:1rem;">→</div>
-      <div style="background:rgba(230,126,34,0.4);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#ffe;line-height:1.5;min-width:58px;">
-        📖<br>図鑑に登録
-      </div>
-      <div style="color:#aaa;font-size:1rem;">→</div>
-      <div style="background:rgba(39,174,96,0.4);border-radius:8px;padding:6px 8px;text-align:center;font-size:0.72rem;color:#dfd;line-height:1.5;min-width:58px;">
-        🎭<br>キャラクターに！
-      </div>
+    <!-- フロー -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+      <div style="background:rgba(0,0,0,0.4);border-radius:8px;padding:5px 8px;font-size:0.7rem;color:#a8e6cf;text-align:center;min-width:52px;">🎨<br>顔を描く</div>
+      <div style="color:#555;font-size:0.9rem;">→</div>
+      <div style="background:rgba(0,0,0,0.4);border-radius:8px;padding:5px 8px;font-size:0.7rem;color:#a8e6cf;text-align:center;min-width:52px;">🏷️<br>名前をつける</div>
+      <div style="color:#555;font-size:0.9rem;">→</div>
+      <div style="background:rgba(230,126,34,0.3);border-radius:8px;padding:5px 8px;font-size:0.7rem;color:#ffe;text-align:center;min-width:52px;">📖<br>図鑑に登録</div>
+      <div style="color:#555;font-size:0.9rem;">→</div>
+      <div style="background:rgba(39,174,96,0.3);border-radius:8px;padding:5px 8px;font-size:0.7rem;color:#dfd;text-align:center;min-width:52px;">🎭<br>キャラクターに！</div>
     </div>
 
     <!-- 木のテーマ -->
-    <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:10px;margin-bottom:10px;">
-      <div style="font-size:0.85rem;font-weight:bold;color:#a8e6cf;margin-bottom:4px;">🌳 みんなで木を育てよう！</div>
-      <div style="font-size:0.78rem;color:#ccc;line-height:1.6;margin-bottom:8px;">
+    <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;margin-bottom:12px;">
+      <div style="font-size:0.82rem;font-weight:bold;color:#a8e6cf;margin-bottom:4px;">🌳 みんなで木を育てよう！</div>
+      <div style="font-size:0.75rem;color:#ccc;line-height:1.6;">
         あなたが描いた顔が<b style="color:#a8e6cf;">葉っぱや実</b>になって、季節の木に加わっていく。<br>
         みんなの顔が集まるほど、木はどんどん賑やかに育ちます🍃
       </div>
-      <!-- 木のイラスト（SVG） -->
-      <svg width="100%" viewBox="0 0 280 200" style="display:block;border-radius:10px;background:linear-gradient(180deg,#b8d4f0 0%,#d4edda 60%,#8fbc6f 100%);">
-        <!-- 空 -->
+      <!-- 木のSVG（そのまま保持） -->
+      <svg width="100%" viewBox="0 0 280 200" style="display:block;border-radius:10px;background:linear-gradient(180deg,#b8d4f0 0%,#d4edda 60%,#8fbc6f 100%);margin-top:8px;">
         <ellipse cx="60" cy="30" rx="28" ry="18" fill="white" opacity="0.6"/>
         <ellipse cx="220" cy="20" rx="22" ry="14" fill="white" opacity="0.5"/>
-        <!-- 幹 -->
         <rect x="126" y="130" width="28" height="60" fill="#795548" rx="4"/>
         <rect x="130" y="150" width="20" height="40" fill="#6d4c41" rx="2"/>
-        <!-- 枝 -->
         <line x1="140" y1="145" x2="80" y2="110" stroke="#795548" stroke-width="7" stroke-linecap="round"/>
         <line x1="140" y1="140" x2="200" y2="108" stroke="#795548" stroke-width="6" stroke-linecap="round"/>
         <line x1="140" y1="150" x2="60" y2="130" stroke="#6d4c41" stroke-width="5" stroke-linecap="round"/>
         <line x1="140" y1="148" x2="220" y2="128" stroke="#6d4c41" stroke-width="4" stroke-linecap="round"/>
-        <!-- 葉っぱ（背景） -->
         <ellipse cx="140" cy="75" rx="65" ry="55" fill="#27ae60" opacity="0.9"/>
         <ellipse cx="90" cy="90" rx="42" ry="38" fill="#2ecc71" opacity="0.85"/>
         <ellipse cx="192" cy="88" rx="40" ry="36" fill="#27ae60" opacity="0.85"/>
         <ellipse cx="140" cy="60" rx="45" ry="35" fill="#58d68d" opacity="0.8"/>
-        <!-- 顔A（葉っぱに乗った顔） -->
         <circle cx="100" cy="80" r="14" fill="#FFCBA4" stroke="#e67e22" stroke-width="1.5"/>
         <circle cx="95.5" cy="77" r="2" fill="#333"/><circle cx="104.5" cy="77" r="2" fill="#333"/>
         <path d="M96,84 Q100,88 104,84" stroke="#333" stroke-width="1.3" fill="none" stroke-linecap="round"/>
-        <!-- 顔B -->
         <circle cx="140" cy="55" r="13" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5"/>
         <circle cx="135.5" cy="52" r="1.8" fill="#333"/><circle cx="144.5" cy="52" r="1.8" fill="#333"/>
         <path d="M136,59 Q140,63 144,59" stroke="#333" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-        <!-- 顔C（実っぽい・オレンジ） -->
         <circle cx="178" cy="75" r="13" fill="#ffe0b2" stroke="#e65100" stroke-width="1.5"/>
         <circle cx="173.5" cy="72" r="1.8" fill="#333"/><circle cx="182.5" cy="72" r="1.8" fill="#333"/>
         <path d="M174,79 Q178,83 182,79" stroke="#333" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-        <!-- 顔D（小さい・背後の葉） -->
         <circle cx="120" cy="55" r="10" fill="#c8e6c9" stroke="#388e3c" stroke-width="1"/>
         <circle cx="116.5" cy="53" r="1.5" fill="#444"/><circle cx="123.5" cy="53" r="1.5" fill="#444"/>
         <path d="M117,57.5 Q120,60.5 123,57.5" stroke="#444" stroke-width="1" fill="none"/>
-        <!-- 顔E（右上・小） -->
         <circle cx="162" cy="52" r="10" fill="#f8bbd9" stroke="#c2185b" stroke-width="1"/>
         <circle cx="158.5" cy="50" r="1.5" fill="#444"/><circle cx="165.5" cy="50" r="1.5" fill="#444"/>
         <path d="M159,54.5 Q162,57.5 165,54.5" stroke="#444" stroke-width="1" fill="none"/>
-        <!-- あなたの顔が加わる -->
         <circle cx="78" cy="110" r="13" fill="white" stroke="#27ae60" stroke-width="2" stroke-dasharray="3,2.5" opacity="0.9"/>
         <text x="78" y="107" text-anchor="middle" font-size="10" font-family="sans-serif">🎨</text>
         <text x="78" y="120" text-anchor="middle" font-size="6" fill="#27ae60" font-family="sans-serif">あなた</text>
-        <!-- 地面 -->
         <rect x="0" y="185" width="280" height="15" fill="#6a9e4a"/>
-        <!-- キャプション -->
         <text x="140" y="198" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="bold" font-family="sans-serif">みんなの顔が集まって木が完成する！</text>
       </svg>
-      <div style="font-size:0.72rem;color:#aaa;margin-top:5px;text-align:center;">※ 木のテーマは近日公開予定🌱</div>
+      <div style="font-size:0.7rem;color:#aaa;margin-top:4px;text-align:center;">※ 木のテーマは近日公開予定🌱</div>
     </div>
 
-    <!-- おまんぼさんイメージ画像 -->
-    <img src="omanbo-village.png" alt="おまんぼさんイラスト" style="display:block;width:100%;border-radius:10px;object-fit:cover;">
-    <div style="font-size:0.75rem;color:#aaa;margin-top:6px;">人気のキャラクターは商品化も検討中✨ / 定期的に「本物を探せ！」クイズ開催予定🔍</div>
+    <!-- おまんぼさん画像 -->
+    <img src="omanbo-village.png" alt="おまんぼさんイラスト" style="display:block;width:100%;border-radius:10px;object-fit:cover;margin-bottom:10px;">
+    <div style="font-size:0.72rem;color:#aaa;margin-bottom:12px;">人気のキャラクターは商品化も検討中✨ / 定期的に「本物を探せ！」クイズ開催予定🔍</div>
+
+    <button onclick="selectModeAndStart('drawing')" style="width:100%;padding:14px;background:linear-gradient(135deg,#27ae60,#1e8449);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(39,174,96,0.4);letter-spacing:0.05em;">
+      🎨 お絵描きチャレンジをはじめる →
+    </button>
   </div>
 
-  <div style="display:flex;gap:12px;width:100%;margin-bottom:10px;">
-    <button onclick="selectModeAndStart('scoring')" style="flex:1;padding:16px 8px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;line-height:1.5;">
-      🎯 採点チャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">スコアを競おう！</span>
-    </button>
-    <button onclick="selectModeAndStart('drawing')" style="flex:1;padding:16px 8px;background:#27ae60;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;line-height:1.5;">
-      🎨 お絵描きチャレンジ<br><span style="font-size:0.72rem;font-weight:normal;">キャラクターになろう！</span>
-    </button>
-  </div>
-  <button onclick="openZukan()" style="width:100%;padding:13px;background:#e67e22;color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:bold;cursor:pointer;">
-    📖 おまんぼさん図鑑を見る<br><span style="font-size:0.72rem;font-weight:normal;">みんなのキャラクターたちに会いに行こう</span>
+  <!-- 図鑑ボタン -->
+  <button onclick="openZukan()" style="width:100%;padding:14px;background:linear-gradient(135deg,#e67e22,#d35400);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.3);margin-bottom:6px;">
+    📖 おまんぼさん図鑑を見る<br><span style="font-size:0.72rem;font-weight:normal;opacity:0.9;">みんなのキャラクターたちに会いに行こう</span>
   </button>
+  <div style="height:20px;"></div>
+
 </div>
 
 <!-- 開始オーバーレイ -->
@@ -549,14 +588,24 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       style="width:100%;padding:8px;border:2px solid #e67e22;border-radius:6px;font-size:0.95rem;margin-bottom:8px;box-sizing:border-box;font-weight:bold;"
       oninput="updateOdekakiSubmitBtn()">
 
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">✏️ 作者ペンネーム（必須・最大15文字）</div>
+    <input type="text" id="odekaki-penname" placeholder="例: おまんぼ太郎" maxlength="15"
+      style="width:100%;padding:8px;border:2px solid #e67e22;border-radius:6px;font-size:0.9rem;margin-bottom:8px;box-sizing:border-box;"
+      oninput="updateOdekakiSubmitBtn()">
+
     <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">💬 このキャラクターのひとこと（任意・最大20文字）</div>
     <input type="text" id="odekaki-comment" placeholder="例: 眉毛が自慢" maxlength="20"
       style="width:100%;padding:8px;border:2px solid #ddd;border-radius:6px;font-size:0.9rem;margin-bottom:10px;box-sizing:border-box;">
 
-    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">📸 Instagramアカウント名（@なしでOK）</div>
-    <input type="text" id="odekaki-instagram" placeholder="例: omanbo_taro"
-      style="width:100%;padding:8px;border:2px solid #27ae60;border-radius:6px;font-size:0.9rem;margin-bottom:8px;box-sizing:border-box;"
-      oninput="updateOdekakiSubmitBtn()">
+    <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">📸 Instagramアカウント名（プレゼント受け取り希望の方のみ・@なしでOK）</div>
+    <input type="text" id="odekaki-instagram" placeholder="例: omanbo_taro（任意）"
+      style="width:100%;padding:8px;border:2px solid #aaa;border-radius:6px;font-size:0.9rem;margin-bottom:6px;box-sizing:border-box;">
+
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.78rem;cursor:pointer;line-height:1.4;margin-bottom:6px;">
+      <input type="checkbox" id="odekaki-ig-show" style="margin-top:2px;flex-shrink:0;">
+      <span>Instagramアカウント名を図鑑にも表示する</span>
+    </label>
+
     <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.8rem;cursor:pointer;line-height:1.4;">
       <input type="checkbox" id="odekaki-follow-check" onchange="updateOdekakiSubmitBtn()" style="margin-top:2px;flex-shrink:0;">
       <span><a href="https://www.instagram.com/omanbosan.lv/" target="_blank" style="color:#27ae60;font-weight:bold;">@omanbosan.lv</a> をフォロー済みです</span>
@@ -589,11 +638,26 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <button onclick="refreshZukan()" id="zukan-refresh-btn"
         style="padding:6px 12px;background:#e67e22;color:white;border:none;border-radius:20px;font-size:0.8rem;cursor:pointer;">🔄 更新</button>
     </div>
-    <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">みんなが生み出したキャラクターたち</p>
+    <p style="font-size:0.8rem;color:#888;margin-bottom:6px;">みんなが生み出したキャラクターたち</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+      <span id="vote-counter" style="font-size:0.78rem;color:#e67e22;font-weight:bold;">残り投票: 3 / 3票</span>
+      <button onclick="openPodium()" style="padding:5px 12px;background:#f39c12;color:white;border:none;border-radius:20px;font-size:0.78rem;cursor:pointer;">🏆 人気ランキング</button>
+    </div>
     <div id="zukan-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
     <div id="zukan-loading" style="text-align:center;padding:20px;color:#888;font-size:0.9rem;">読み込み中...</div>
     <div id="zukan-empty" style="display:none;text-align:center;padding:20px;color:#aaa;font-size:0.85rem;">まだキャラクターがいません。<br>最初のキャラクターになろう！</div>
     <button onclick="document.getElementById('zukan-modal').classList.remove('show')" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">閉じる</button>
+  </div>
+</div>
+
+<!-- 表彰台モーダル -->
+<div class="modal-bg" id="podium-modal">
+  <div class="modal-box" style="max-width:400px;">
+    <h2 style="color:#f39c12;margin-bottom:4px;">🏆 人気ランキング</h2>
+    <p style="font-size:0.75rem;color:#aaa;margin-bottom:16px;">今月のみんなの一票が集まりました</p>
+    <div id="podium-content" style="margin-bottom:16px;"></div>
+    <p style="font-size:0.7rem;color:#bbb;margin-bottom:12px;">※ 投票数は非公開です / 毎月最終週に投票・月末締め</p>
+    <button onclick="document.getElementById('podium-modal').classList.remove('show')" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">閉じる</button>
   </div>
 </div>
 
@@ -1960,10 +2024,10 @@ function floodFill(fillCanvas, lineCanvas, startX, startY, fillHex) {
 
 function updateOdekakiSubmitBtn() {
   const name    = (document.getElementById('odekaki-name').value || '').trim();
-  const ig      = (document.getElementById('odekaki-instagram').value || '').trim();
+  const penname = (document.getElementById('odekaki-penname').value || '').trim();
   const checked = document.getElementById('odekaki-follow-check').checked;
   const btn     = document.getElementById('odekaki-save-btn');
-  const ok = name.length > 0 && ig.length > 0 && checked;
+  const ok = name.length > 0 && penname.length > 0 && checked;
   btn.disabled = !ok;
   btn.style.opacity = ok ? '1' : '0.5';
   btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
@@ -1971,11 +2035,13 @@ function updateOdekakiSubmitBtn() {
 
 async function saveOdekakiImage() {
   const villageName = (document.getElementById('odekaki-name').value || '').trim();
+  const penname     = (document.getElementById('odekaki-penname').value || '').trim();
   const comment     = (document.getElementById('odekaki-comment').value || '').trim();
   const ig          = (document.getElementById('odekaki-instagram').value || '').trim().replace('@','');
+  const igShow      = document.getElementById('odekaki-ig-show').checked;
   const followed    = document.getElementById('odekaki-follow-check').checked;
-  if (!villageName || !ig || !followed) {
-    alert('キャラクター名・Instagramアカウント・フォロー確認をすべて入力してください');
+  if (!villageName || !penname || !followed) {
+    alert('キャラクター名・作者ペンネーム・フォロー確認をすべて入力してください');
     return;
   }
   const btn = document.getElementById('odekaki-save-btn');
@@ -2023,6 +2089,8 @@ async function saveOdekakiImage() {
         body: JSON.stringify({
           type: 'drawing',
           instagram: ig,
+          igShow: igShow,
+          penname: penname,
           villageName: villageName,
           comment: comment,
           image: dataUrl
@@ -2030,7 +2098,7 @@ async function saveOdekakiImage() {
       });
     } catch(e) {}
   }
-  alert(`✅ 投稿ありがとうございます！\n「${villageName}」として受け付けました🎉\n\nおまんぼさんスタッフが内容を確認してから\n図鑑に公開しますので、\n反映は明日以降になります🌿\n\n画像は上の丸い画像を長押しして保存📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね！`);
+  alert(`✅ 投稿ありがとうございます！\n「${villageName}」として受け付けました🎉\n\nおまんぼさんスタッフが内容を確認してから\n図鑑に公開しますので、\n反映は明日以降になります🌿\n\n画像は上の丸い画像を長押しして保存📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね！\n\n作者: ${penname}`);
   btn.textContent = '💾 投稿＆図鑑登録する'; btn.disabled = false; btn.style.opacity = '1';
 }
 
@@ -2068,6 +2136,7 @@ async function openZukan() {
   if (zukanCache && Date.now() - zukanFetchedAt < ZUKAN_TTL) {
     loading.style.display = 'none';
     renderZukanList(list, empty, zukanCache);
+    updateVoteCounter();
     // バックグラウンドで静かに更新（次回用）
     setTimeout(prefetchZukan, 500);
     return;
@@ -2084,6 +2153,7 @@ async function openZukan() {
     await zukanPromise;
     loading.style.display = 'none';
     renderZukanList(list, empty, zukanCache);
+    updateVoteCounter();
   } catch(e) {
     loading.textContent = '読み込みに失敗しました';
   }
@@ -2115,22 +2185,124 @@ function renderZukanList(list, empty, data) {
     return;
   }
   empty.style.display = 'none';
-  data.forEach(entry => {
+
+  // 投票状態を取得
+  const myVotes = getMyVotes();
+  const totalCast = Object.values(myVotes).reduce((s,v)=>s+v,0);
+  const MAX_VOTES = 3;
+
+  data.forEach((entry, index) => {
+    const displayNo = index + 1; // 連番（却下分は含まない）
+    const alreadyVoted = myVotes[entry.no] || 0;
+    const canVote = totalCast < MAX_VOTES && !alreadyVoted;
+
     const card = document.createElement('div');
-    card.style.cssText = 'background:#fffbf0;border:2px solid #f39c12;border-radius:10px;padding:10px;text-align:center;';
+    card.style.cssText = 'background:#fffbf0;border:2px solid #f39c12;border-radius:10px;padding:10px;text-align:center;position:relative;';
     card.innerHTML = `
-      <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;">No.${String(entry.no).padStart(3,'0')}</div>
+      <div style="font-size:0.65rem;color:#aaa;margin-bottom:3px;">No.${String(displayNo).padStart(3,'0')}</div>
       ${entry.imageUrl
         ? `<img src="${entry.imageUrl}" loading="lazy" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
         : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎨</div>`
       }
-      <div style="font-size:0.95rem;font-weight:bold;color:#c0392b;margin-bottom:3px;">${entry.villageName}</div>
-      ${entry.comment ? `<div style="font-size:0.75rem;color:#666;margin-bottom:3px;">「${entry.comment}」</div>` : ''}
-      <div style="font-size:0.7rem;color:#aaa;">@${entry.instagram}</div>
-      <div style="font-size:0.65rem;color:#bbb;">${entry.date}</div>
+      <div style="font-size:0.9rem;font-weight:bold;color:#c0392b;margin-bottom:2px;">${entry.villageName}</div>
+      <div style="font-size:0.72rem;color:#888;margin-bottom:2px;">by ${entry.penname || '?'}</div>
+      ${entry.comment ? `<div style="font-size:0.72rem;color:#666;margin-bottom:2px;">「${entry.comment}」</div>` : ''}
+      ${entry.igShow && entry.instagram ? `<div style="font-size:0.65rem;color:#aaa;margin-bottom:4px;">@${entry.instagram}</div>` : ''}
+      <button onclick="castZukanVote(${entry.no}, this)"
+        style="margin-top:4px;padding:5px 10px;border:none;border-radius:20px;font-size:0.72rem;cursor:${canVote ? 'pointer' : 'default'};
+        background:${alreadyVoted ? '#e67e22' : (canVote ? '#fff3e0' : '#eee')};
+        color:${alreadyVoted ? 'white' : (canVote ? '#e67e22' : '#aaa')};
+        border:1px solid ${alreadyVoted ? '#e67e22' : (canVote ? '#e67e22' : '#ddd')};"
+        ${(!canVote && !alreadyVoted) ? 'disabled' : ''}>
+        ${alreadyVoted ? '❤️ 投票済み' : (canVote ? '🤍 投票する' : '🤍 投票')}
+      </button>
     `;
     list.appendChild(card);
   });
+
+  // 残り投票数を表示
+  updateVoteCounter();
+}
+
+// ================================================================
+// 図鑑 投票機能（localStorage・月次リセット）
+// ================================================================
+function voteKey() {
+  const d = new Date();
+  return `omanbo_votes_${d.getFullYear()}_${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function getMyVotes() {
+  try { return JSON.parse(localStorage.getItem(voteKey()) || '{}'); } catch(e) { return {}; }
+}
+
+function saveMyVotes(v) { localStorage.setItem(voteKey(), JSON.stringify(v)); }
+
+function castZukanVote(entryNo, btn) {
+  const votes = getMyVotes();
+  const total = Object.values(votes).reduce((s,v)=>s+v,0);
+  if (votes[entryNo]) return; // すでに投票済み
+  if (total >= 3) return;     // 3票使い切り
+  votes[entryNo] = (votes[entryNo] || 0) + 1;
+  saveMyVotes(votes);
+  // ボタン更新
+  btn.textContent = '❤️ 投票済み';
+  btn.style.background = '#e67e22';
+  btn.style.color = 'white';
+  btn.style.borderColor = '#e67e22';
+  // 残り投票数更新
+  updateVoteCounter();
+  // 3票使い切ったら他のボタンも無効化
+  const newTotal = Object.values(votes).reduce((s,v)=>s+v,0);
+  if (newTotal >= 3) {
+    document.querySelectorAll('#zukan-list button:not([style*="e67e22"])').forEach(b => {
+      b.disabled = true;
+      b.style.background = '#eee';
+      b.style.color = '#aaa';
+      b.style.borderColor = '#ddd';
+    });
+  }
+}
+
+function updateVoteCounter() {
+  const votes = getMyVotes();
+  const used  = Object.values(votes).reduce((s,v)=>s+v,0);
+  const el = document.getElementById('vote-counter');
+  if (el) el.textContent = `残り投票: ${3 - used} / 3票`;
+}
+
+function openPodium() {
+  document.getElementById('podium-modal').classList.add('show');
+  const votes = getMyVotes();
+  const data  = zukanCache || [];
+
+  // 投票数でソート（上位3件）
+  const ranked = data
+    .map(e => ({ ...e, voteCount: votes[e.no] || 0 }))
+    .filter(e => e.voteCount > 0)
+    .sort((a,b) => b.voteCount - a.voteCount)
+    .slice(0, 3);
+
+  const content = document.getElementById('podium-content');
+  if (ranked.length === 0) {
+    content.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:0.85rem;">まだ投票がありません🗳️</div>';
+    return;
+  }
+
+  const medals  = ['🥇','🥈','🥉'];
+  const bgColors = ['rgba(255,215,0,0.15)','rgba(192,192,192,0.15)','rgba(205,97,51,0.15)'];
+  const borders  = ['#ffd700','#c0c0c0','#cd6133'];
+
+  content.innerHTML = ranked.map((e, i) => `
+    <div style="display:flex;align-items:center;gap:10px;background:${bgColors[i]};border:1.5px solid ${borders[i]};border-radius:12px;padding:10px;margin-bottom:8px;">
+      <div style="font-size:2rem;flex-shrink:0;">${medals[i]}</div>
+      ${e.imageUrl ? `<img src="${e.imageUrl}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : '<div style="width:50px;height:50px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🎨</div>'}
+      <div style="text-align:left;">
+        <div style="font-size:0.95rem;font-weight:bold;color:#c0392b;">${e.villageName}</div>
+        <div style="font-size:0.75rem;color:#888;">by ${e.penname || '?'}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 function closeOdekakiOverlay() {
@@ -2281,6 +2453,25 @@ function setupOdekakiCanvas() {
   c.addEventListener('touchend',   onEnd,   { passive: false });
 }
 
+function closeOpeningScreen() {
+  const el = document.getElementById('opening-screen');
+  el.style.transition = 'opacity 0.5s';
+  el.style.opacity = '0';
+  setTimeout(() => el.style.display = 'none', 500);
+}
+
+function initOpeningStars() {
+  const container = document.getElementById('opening-stars');
+  if (!container) return;
+  const emojis = ['✨','🌟','⭐','🎨','🖌️','🎭'];
+  for (let i = 0; i < 18; i++) {
+    const star = document.createElement('div');
+    star.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    star.style.cssText = `position:absolute;font-size:${Math.random()*14+8}px;left:${Math.random()*100}%;top:-20px;animation:star-fall ${Math.random()*6+4}s linear ${Math.random()*4}s infinite;opacity:0.7;`;
+    container.appendChild(star);
+  }
+}
+
 // ================================================================
 // 起動
 // ================================================================
@@ -2291,6 +2482,8 @@ window.addEventListener('load', () => {
   }, 120);
   // 図鑑データをバックグラウンドで先読み（GASコールドスタート対策）
   setTimeout(prefetchZukan, 1500);
+  // オープニング画面の星パーティクル初期化
+  initOpeningStars();
 });
 </script>
 </body>
