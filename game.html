@@ -228,12 +228,15 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <div class="tray-slot" id="slot-nose"></div>
       <div class="tray-slot" id="slot-mouth"></div>
     </div>
-    <div id="freehand-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#111; z-index:50; border-radius:16px; flex-direction:column; align-items:center; justify-content:center;">
-      <div id="fh-instruction" style="color:white; font-size:1rem; font-weight:bold; margin-bottom:8px; text-align:center; padding:0 8px;"></div>
-      <canvas id="fh-canvas" width="460" height="400" style="background:transparent; touch-action:none; cursor:crosshair;"></canvas>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button id="fh-next-btn" style="display:none; padding:10px 24px; background:#27ae60; color:white; border:none; border-radius:8px; font-size:1rem; cursor:pointer;">次へ →</button>
-        <button id="fh-redo-btn" style="display:none; padding:6px 16px; background:#e67e22; color:white; border:none; border-radius:6px; font-size:0.85rem; cursor:pointer;">もう一度</button>
+    <div id="freehand-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#111; z-index:50; border-radius:16px;">
+      <!-- 指示テキスト（最前面・上部） -->
+      <div id="fh-instruction" style="position:absolute;top:0;left:0;right:0;z-index:3;font-size:0.95rem;font-weight:bold;text-align:center;padding:7px 8px 6px;color:white;background:rgba(0,0,0,0.55);border-radius:16px 16px 0 0;pointer-events:none;"></div>
+      <!-- キャンバス（460×500 フルサイズ・座標系を採点と統一） -->
+      <canvas id="fh-canvas" width="460" height="500" style="position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas>
+      <!-- ボタン（最前面・下部） -->
+      <div id="fh-btn-row" style="position:absolute;bottom:8px;left:0;right:0;display:flex;gap:8px;justify-content:center;z-index:3;">
+        <button id="fh-next-btn" style="display:none; padding:10px 24px; background:#27ae60; color:white; border:none; border-radius:8px; font-size:1rem; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.4);">次へ →</button>
+        <button id="fh-redo-btn" style="display:none; padding:6px 16px; background:#e67e22; color:white; border:none; border-radius:6px; font-size:0.85rem; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.4);">もう一度</button>
       </div>
     </div>
   </div></div>
@@ -1262,25 +1265,22 @@ const FH_PART_ORDER = ['hair','reye','leye','nose','mouth'];
 
 function startFreehandMode() {
   freehandMode = true;
-  fhStrokes = {};
-  fhPartIndex = 0;
-  // Hide part elements and tray
+  fhStrokes    = {};
+  fhPartIndex  = 0;
   document.querySelectorAll('.part').forEach(el => el.style.visibility = 'hidden');
-  const trayArea = document.getElementById('tray') || document.querySelector('.tray');
+  const trayArea = document.getElementById('tray');
   if (trayArea) trayArea.style.visibility = 'hidden';
 
-  // 難易度別オーバーレイ外観
+  // 難易度別オーバーレイ背景
   const overlay = document.getElementById('freehand-overlay');
-  const instr   = document.getElementById('fh-instruction');
   if (currentDifficulty === 'easy') {
-    overlay.style.background = 'rgba(255,245,230,0.97)';
-    instr.style.color = '#333';
+    overlay.style.background = 'rgba(255,248,235,1)'; // 明るいクリーム
+  } else if (currentDifficulty === 'normal') {
+    overlay.style.background = 'rgba(255,255,255,1)'; // 白
   } else {
-    overlay.style.background = '#111';
-    instr.style.color = 'white';
+    overlay.style.background = '#111';                // 真っ暗
   }
-
-  overlay.style.display = 'flex';
+  overlay.style.display = 'block'; // blockにしてcanvasが全面を覆う
   startFhPart(0);
 }
 
@@ -1288,7 +1288,7 @@ function stopFreehandMode() {
   freehandMode = false;
   document.getElementById('freehand-overlay').style.display = 'none';
   document.querySelectorAll('.part').forEach(el => el.style.visibility = 'visible');
-  const trayArea = document.getElementById('tray') || document.querySelector('.tray');
+  const trayArea = document.getElementById('tray');
   if (trayArea) trayArea.style.visibility = 'visible';
 }
 
@@ -1302,8 +1302,8 @@ async function startFhPart(index) {
     renderFreehandStrokes();
     return;
   }
-  fhCurrentKey = FH_PART_ORDER[index];
-  fhPartIndex  = index;
+  fhCurrentKey    = FH_PART_ORDER[index];
+  fhPartIndex     = index;
   fhCurrentStroke = [];
   fhStrokes[fhCurrentKey] = [];
 
@@ -1314,56 +1314,75 @@ async function startFhPart(index) {
   const ctx    = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const labels   = {hair:'髪',reye:'左目',leye:'右目',nose:'鼻',mouth:'口'};
+  const labels    = {hair:'髪', reye:'左目', leye:'右目', nose:'鼻', mouth:'口'};
   const remaining = FH_PART_ORDER.length - index;
+  const instr     = document.getElementById('fh-instruction');
 
-  // ── 難易度別 ──────────────────────────────────────
+  // ── 難易度別描画 ───────────────────────────────────
   if (currentDifficulty === 'easy') {
-    // イージー: 見本を半透明表示 → 全パーツガイド
-    await drawEasyModeGuide(ctx);
-    // 過去パーツの線も重ねる
-    drawPastStrokes(ctx, index);
-    document.getElementById('fh-instruction').innerHTML =
-      `<span style="color:#c0392b;">【${labels[fhCurrentKey]}】</span>を見本の上に描いてください`
-      + `<br><small style="color:#888;">残り ${remaining} パーツ</small>`;
+    // イージー: 答え合わせ用の見本画像を半透明表示 + 過去ストローク
+    await drawAnswerImageGuide(ctx);
+    drawPastStrokes(ctx, index, '#c0392b');
+    instr.style.color      = '#333';
+    instr.style.background = 'rgba(255,240,200,0.85)';
+    instr.innerHTML =
+      `😄 【${labels[fhCurrentKey]}】を見本の上に描いてください`
+      + ` <small style="color:#888;">残り${remaining}パーツ</small>`;
+
   } else if (currentDifficulty === 'normal') {
-    // 通常: 見本なし・過去の線は見える
-    drawPastStrokes(ctx, index);
-    document.getElementById('fh-instruction').innerHTML =
-      `<span style="color:#f39c12;">【${labels[fhCurrentKey]}】</span>を描いてください`
-      + `<br><small style="opacity:0.6;">残り ${remaining} パーツ（自分の線のみ表示）</small>`;
+    // 通常: 白背景・顔の輪郭・自分の過去ストロークのみ
+    drawFaceOutline(ctx);
+    drawPastStrokes(ctx, index, '#222');
+    instr.style.color      = '#333';
+    instr.style.background = 'rgba(220,220,220,0.85)';
+    instr.innerHTML =
+      `😊 【${labels[fhCurrentKey]}】を描いてください`
+      + ` <small style="color:#666;">残り${remaining}パーツ</small>`;
+
   } else {
     // 鬼: 真っ暗・何も見えない
-    document.getElementById('fh-instruction').innerHTML =
-      `【${labels[fhCurrentKey]}】を描いてください`
-      + `<br><small style="opacity:0.5;">残り ${remaining} パーツ（画面は真っ暗）</small>`;
+    instr.style.color      = 'white';
+    instr.style.background = 'rgba(0,0,0,0.55)';
+    instr.innerHTML =
+      `👹 【${labels[fhCurrentKey]}】を描いてください`
+      + ` <small style="opacity:0.5;">残り${remaining}パーツ（目隠し）</small>`;
   }
 
-  // 現在パーツの描画色をリセット
-  ctx.strokeStyle = currentDifficulty === 'easy' ? '#c0392b' : '#ffffff';
-  ctx.lineWidth   = 8;
-  ctx.lineCap     = 'round';
-  ctx.lineJoin    = 'round';
+  // 現在の描画スタイルをセット
+  ctx.strokeStyle = currentDifficulty === 'hard' ? '#ffffff'
+                  : (currentDifficulty === 'easy' ? '#c0392b' : '#222222');
+  ctx.lineWidth = 8;
+  ctx.lineCap   = 'round';
+  ctx.lineJoin  = 'round';
 }
 
-// 過去パーツのストロークを薄い色で再描画（通常/イージー用）
-function drawPastStrokes(ctx, upToIndex) {
+// 顔の輪郭円を描画（通常モード用）
+function drawFaceOutline(ctx) {
+  ctx.save();
+  ctx.strokeStyle = '#aaa';
+  ctx.lineWidth   = 5;
+  ctx.beginPath();
+  ctx.arc(FACE_CX, FACE_CY, FACE_R, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// 過去パーツのストロークを描画（通常/イージー用）
+function drawPastStrokes(ctx, upToIndex, fallbackColor) {
   const colors = {
-    hair:  'rgba(231,76,60,0.55)',
-    reye:  'rgba(52,152,219,0.55)',
-    leye:  'rgba(46,204,113,0.55)',
-    nose:  'rgba(241,196,15,0.65)',
-    mouth: 'rgba(155,89,182,0.55)'
+    hair: '#e74c3c', reye: '#3498db', leye: '#27ae60',
+    nose: '#e67e22', mouth: '#9b59b6'
   };
   for (let i = 0; i < upToIndex; i++) {
-    const k = FH_PART_ORDER[i];
+    const k       = FH_PART_ORDER[i];
     const strokes = fhStrokes[k] || [];
     if (!strokes.length) continue;
     ctx.save();
-    ctx.strokeStyle = colors[k];
+    ctx.strokeStyle = colors[k] || fallbackColor || '#333';
     ctx.lineWidth   = 8;
     ctx.lineCap     = 'round';
     ctx.lineJoin    = 'round';
+    ctx.globalAlpha = 0.75;
     strokes.forEach(stroke => {
       if (stroke.length < 2) return;
       ctx.beginPath();
@@ -1375,39 +1394,28 @@ function drawPastStrokes(ctx, upToIndex) {
   }
 }
 
-// イージーモード用: 正解パーツを半透明で描画
-async function drawEasyModeGuide(ctx) {
-  // 顔の輪郭
-  ctx.save();
-  ctx.globalAlpha = 0.25;
-  ctx.strokeStyle = '#888';
-  ctx.lineWidth   = 6;
-  ctx.beginPath();
-  ctx.arc(FACE_CX, FACE_CY, FACE_R, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-
-  // 各パーツ画像
-  for (const key of FH_PART_ORDER) {
-    const cfg = PARTS[key];
-    const m   = cfg.svgContent.match(/src="([^"]+)"/);
-    if (!m) continue;
-    await new Promise(res => {
-      const img = new Image();
-      img.onload = () => {
-        ctx.save();
-        ctx.globalAlpha = 0.38;
-        ctx.drawImage(img,
-          cfg.target.x - cfg.w / 2,
-          cfg.target.y - cfg.h / 2,
-          cfg.w, cfg.h);
-        ctx.restore();
-        res();
-      };
-      img.onerror = res;
-      img.src = m[1];
-    });
-  }
+// イージーモード用: 答え合わせで使っている見本画像（ANSWER_SVG）を半透明表示
+async function drawAnswerImageGuide(ctx) {
+  const m = ANSWER_SVG.match(/href="(data:image\/[^;]+;base64,[^"]+)"/);
+  if (!m) return;
+  await new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      // renderResultCanvas と同じ座標・スケール計算
+      const SC   = FACE_R / 255;
+      const imgW = 540 * SC;
+      const imgH = 540 * SC;
+      const imgX = FACE_CX - 270 * SC;
+      const imgY = FACE_CY - 270 * SC;
+      ctx.save();
+      ctx.globalAlpha = 0.40;
+      ctx.drawImage(img, imgX, imgY, imgW, imgH);
+      ctx.restore();
+      res();
+    };
+    img.onerror = res;
+    img.src = m[1];
+  });
 }
 
 function setupFhCanvas() {
@@ -1430,11 +1438,12 @@ function setupFhCanvas() {
     e.preventDefault();
     fhDrawing = true;
     fhCurrentStroke = [];
-    // 難易度別の線色
-    ctx.strokeStyle = currentDifficulty === 'easy' ? '#c0392b' : '#ffffff';
-    ctx.lineWidth   = 8;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
+    // 難易度別の線色（startFhPart でセット済みだが念のため同期）
+    ctx.strokeStyle = currentDifficulty === 'hard' ? '#ffffff'
+                    : (currentDifficulty === 'easy' ? '#c0392b' : '#222222');
+    ctx.lineWidth = 8;
+    ctx.lineCap   = 'round';
+    ctx.lineJoin  = 'round';
     const pos = getPos(e);
     fhCurrentStroke.push(pos);
     ctx.beginPath();
