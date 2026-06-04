@@ -1208,6 +1208,7 @@ async function doScore() {
       const em = s >= 18 ? '🌟' : s >= 14 ? '👍' : s >= 8 ? '😅' : '💦';
       html += `<div>${em} ${fhLabels[key]}：${s}点 <small>（重なり度: ${Math.round(s/20*100)}%）</small></div>`;
     });
+    total = Math.min(100, total + 40); // ボーナス+40点（上限100点）
   }
 
   const comment = total >= 92 ? '🎉 神業！！完璧すぎる！！' :
