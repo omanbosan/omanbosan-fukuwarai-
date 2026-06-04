@@ -20,11 +20,12 @@ const CONFIG = {
 function doGet(e) {
   try {
     const type = e && e.parameter && e.parameter.type;
-    if (type === 'ranking') return buildResponse(getRanking());
-    if (type === 'archive') return buildResponse(getLastMonthRanking());
-    if (type === 'zukan')   return buildResponse(getZukan());
-    if (type === 'pending') return buildResponse(getPending());
-    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.7' });
+    if (type === 'ranking')      return buildResponse(getRanking());
+    if (type === 'archive')      return buildResponse(getLastMonthRanking());
+    if (type === 'zukan')        return buildResponse(getZukan());
+    if (type === 'zukanScoring') return buildResponse(getZukanScoring());
+    if (type === 'pending')      return buildResponse(getPending());
+    return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.8' });
   } catch(err) {
     return buildResponse({ error: err.message });
   }
@@ -83,23 +84,73 @@ function getLastMonthRanking() {
 }
 
 // ----------------------------------------------------------------
-// スコア保存
+// スコア保存（採点チャレンジ図鑑対応）
+// scores列: 名前, スコア, 日付, Instagram, imageUrl, 難易度, 承認
 // ----------------------------------------------------------------
 function saveScore(data) {
   const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
   let sheet = ss.getSheetByName('scores');
   if (!sheet) {
     sheet = ss.insertSheet('scores');
-    sheet.appendRow(['名前', 'スコア', '日付', 'Instagram']);
+    sheet.appendRow(['名前', 'スコア', '日付', 'Instagram', '画像URL', '難易度', '承認']);
     sheet.setFrozenRows(1);
   }
-  sheet.appendRow([
-    (data.name || '名無し').slice(0, 20),
-    Number(data.score) || 0,
-    new Date().toLocaleDateString('ja-JP'),
-    (data.instagram || '').replace('@', '')
-  ]);
+  // ヘッダー列拡張（既存シート対応）
+  const colCount = sheet.getLastColumn();
+  if (colCount < 5) sheet.getRange(1, 5).setValue('画像URL');
+  if (colCount < 6) sheet.getRange(1, 6).setValue('難易度');
+  if (colCount < 7) sheet.getRange(1, 7).setValue('承認');
+
+  const name       = (data.name || '名無し').slice(0, 20);
+  const score      = Number(data.score) || 0;
+  const instagram  = (data.instagram || '').replace('@', '');
+  const difficulty = data.difficulty || 'normal';
+  const rowIndex   = sheet.getLastRow() + 1;
+
+  sheet.appendRow([name, score, new Date().toLocaleDateString('ja-JP'), instagram,
+                   'Drive保存中...', difficulty, '審査中']);
+
+  // Drive に画像を保存
+  if (data.image) {
+    try {
+      const base64 = data.image.replace(/^data:image\/\w+;base64,/, '');
+      const folder = DriveApp.getFolderById(CONFIG.driveFolderId);
+      const blob   = Utilities.newBlob(
+        Utilities.base64Decode(base64), 'image/png',
+        `score_${name}_${Date.now()}.png`
+      );
+      const file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      sheet.getRange(rowIndex, 5).setValue(file.getUrl());
+    } catch(err) {
+      sheet.getRange(rowIndex, 5).setValue('Drive保存失敗: ' + err.message);
+    }
+  } else {
+    sheet.getRange(rowIndex, 5).setValue('');
+  }
+
   return { ok: true };
+}
+
+// ----------------------------------------------------------------
+// 採点チャレンジ図鑑取得（承認済みのみ）
+// ----------------------------------------------------------------
+function getZukanScoring() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('scores');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  const approved = sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
+    .filter(r => r[0] && (r[6] || '') === '承認済み');
+
+  return approved.map((r, i) => ({
+    no:         i + 1,
+    name:       r[0] || '名無し',
+    score:      Number(r[1]) || 0,
+    date:       r[2] ? String(r[2]).slice(0, 10) : '',
+    imageUrl:   driveUrlToThumb(r[4]),
+    difficulty: r[5] || 'normal'
+  })).reverse();
 }
 
 // ----------------------------------------------------------------
@@ -127,14 +178,18 @@ function getPending() {
 
 // ----------------------------------------------------------------
 // 承認・却下（管理画面用）
+// sheetName: 'drawings'（デフォルト）または 'scores'
 // ----------------------------------------------------------------
 function setApproval(data) {
-  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
-  const sheet = ss.getSheetByName('drawings');
-  if (!sheet) return { error: 'no sheet' };
+  const ss        = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheetName = data.sheetName || 'drawings';
+  const sheet     = ss.getSheetByName(sheetName);
+  if (!sheet) return { error: 'no sheet: ' + sheetName };
   const row    = Number(data.row);
   const status = data.status === '承認済み' ? '承認済み' : '却下';
-  sheet.getRange(row, 8).setValue(status);
+  // drawings: 承認はcol8, scores: 承認はcol7
+  const approvalCol = sheetName === 'scores' ? 7 : 8;
+  sheet.getRange(row, approvalCol).setValue(status);
   return { ok: true, row, status };
 }
 

@@ -276,7 +276,8 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button class="ctrl-btn btn-reset" id="reset-btn">🔄 描き直す</button>
     <button class="ctrl-btn" id="home-btn" style="background:#7f8c8d;color:white;">🏠 トップへ戻る</button>
     <button class="ctrl-btn btn-rank"  id="rank-btn">🏆 ランキング</button>
-    <button class="ctrl-btn" id="zukan-btn" style="background:#e67e22;color:white;" onclick="openZukan()">📖 図鑑</button>
+    <button class="ctrl-btn" id="zukan-btn" style="background:#e67e22;color:white;" onclick="openScoringZukan()">🎯 採点図鑑</button>
+    <button class="ctrl-btn" style="background:#27ae60;color:white;" onclick="openZukan()">🎨 仲間図鑑</button>
     <div id="placed-status">配置状況：</div>
   </div>
 </div>
@@ -336,7 +337,19 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
         <span>🥉 <b style="color:#cd6133;">3等賞</b></span><span style="font-size:0.72rem;color:#aaa;">500円オフクーポン</span>
       </div>
     </div>
-    <button onclick="selectModeAndStart('scoring')" style="margin-top:14px;width:100%;padding:14px;background:linear-gradient(135deg,#e67e22,#c0392b);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.4);letter-spacing:0.05em;">
+    <!-- 難易度選択 -->
+    <div style="margin-top:12px;margin-bottom:2px;">
+      <div style="font-size:0.75rem;color:#aaa;margin-bottom:6px;text-align:center;">🎮 難易度を選んでください</div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="setDifficulty('hard',this)" id="diff-hard"
+          style="flex:1;padding:8px 4px;border:2px solid #e74c3c;background:white;color:#e74c3c;border-radius:8px;font-size:0.8rem;font-weight:bold;cursor:pointer;line-height:1.3;">👹<br>鬼モード</button>
+        <button onclick="setDifficulty('normal',this)" id="diff-normal"
+          style="flex:1;padding:8px 4px;border:2px solid #e67e22;background:#e67e22;color:white;border-radius:8px;font-size:0.8rem;font-weight:bold;cursor:pointer;line-height:1.3;">😊<br>通常モード</button>
+        <button onclick="setDifficulty('easy',this)" id="diff-easy"
+          style="flex:1;padding:8px 4px;border:2px solid #27ae60;background:white;color:#27ae60;border-radius:8px;font-size:0.8rem;font-weight:bold;cursor:pointer;line-height:1.3;">😄<br>イージーモード</button>
+      </div>
+    </div>
+    <button onclick="selectModeAndStart('scoring')" style="margin-top:10px;width:100%;padding:14px;background:linear-gradient(135deg,#e67e22,#c0392b);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.4);letter-spacing:0.05em;">
       🎯 採点チャレンジをはじめる →
     </button>
   </div>
@@ -421,10 +434,15 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     </button>
   </div>
 
-  <!-- 図鑑ボタン -->
-  <button onclick="openZukan()" style="width:100%;padding:14px;background:linear-gradient(135deg,#e67e22,#d35400);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.3);margin-bottom:6px;">
-    📖 おまんぼさん図鑑を見る<br><span style="font-size:0.72rem;font-weight:normal;opacity:0.9;">みんなのキャラクターたちに会いに行こう</span>
-  </button>
+  <!-- 図鑑ボタン群 -->
+  <div style="display:flex;gap:8px;width:100%;margin-bottom:6px;">
+    <button onclick="openZukan()" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,#27ae60,#1e8449);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(39,174,96,0.3);line-height:1.4;">
+      🎨 愉快な仲間たち図鑑<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">お絵描きチャレンジ</span>
+    </button>
+    <button onclick="openScoringZukan()" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,#e67e22,#c0392b);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.3);line-height:1.4;">
+      🎯 採点チャレンジ図鑑<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">みんなの採点結果</span>
+    </button>
+  </div>
   <div style="height:20px;"></div>
 
 </div>
@@ -490,6 +508,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <img id="result-img-clean" src="" alt="採点結果（見本なし）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
       <button id="share-btn" style="display:block;margin:8px auto;padding:8px 20px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">📤 LINEやSNSでシェア</button>
       <div id="share-result" style="display:none; margin:8px auto; text-align:center; font-size:0.8rem; color:#555;"></div>
+      <button onclick="closeScoreModal();openScoringZukan();" style="display:block;margin:8px auto;padding:8px 20px;background:#e67e22;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">🎯 採点チャレンジ図鑑を見る</button>
     </div>
   </div>
 </div>
@@ -630,13 +649,13 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <button onclick="closeOdekakiOverlay()" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">← 戻る</button>
 </div>
 
-<!-- 図鑑モーダル -->
+<!-- お絵描き図鑑モーダル -->
 <div class="modal-bg" id="zukan-modal">
   <div class="modal-box" style="max-width:480px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <h2 style="color:#e67e22;margin:0;">📖 おまんぼさん図鑑</h2>
+      <h2 style="color:#27ae60;margin:0;">🎨 愉快な仲間たち図鑑</h2>
       <button onclick="refreshZukan()" id="zukan-refresh-btn"
-        style="padding:6px 12px;background:#e67e22;color:white;border:none;border-radius:20px;font-size:0.8rem;cursor:pointer;">🔄 更新</button>
+        style="padding:6px 12px;background:#27ae60;color:white;border:none;border-radius:20px;font-size:0.8rem;cursor:pointer;">🔄 更新</button>
     </div>
     <p style="font-size:0.8rem;color:#888;margin-bottom:6px;">みんなが生み出したキャラクターたち</p>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
@@ -647,6 +666,22 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <div id="zukan-loading" style="text-align:center;padding:20px;color:#888;font-size:0.9rem;">読み込み中...</div>
     <div id="zukan-empty" style="display:none;text-align:center;padding:20px;color:#aaa;font-size:0.85rem;">まだキャラクターがいません。<br>最初のキャラクターになろう！</div>
     <button onclick="document.getElementById('zukan-modal').classList.remove('show')" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">閉じる</button>
+  </div>
+</div>
+
+<!-- 採点チャレンジ図鑑モーダル（独立） -->
+<div class="modal-bg" id="scoring-zukan-modal">
+  <div class="modal-box" style="max-width:480px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h2 style="color:#e67e22;margin:0;">🎯 採点チャレンジ図鑑</h2>
+      <button onclick="refreshScoringZukan()" id="scoring-zukan-refresh-btn"
+        style="padding:6px 12px;background:#e67e22;color:white;border:none;border-radius:20px;font-size:0.8rem;cursor:pointer;">🔄 更新</button>
+    </div>
+    <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">みんなが描いたおまんぼさんの採点結果</p>
+    <div id="zukan-scoring-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
+    <div id="zukan-scoring-loading" style="text-align:center;padding:20px;color:#888;font-size:0.9rem;">読み込み中...</div>
+    <div id="zukan-scoring-empty" style="display:none;text-align:center;padding:20px;color:#aaa;font-size:0.85rem;">まだ採点結果がありません。</div>
+    <button onclick="document.getElementById('scoring-zukan-modal').classList.remove('show')" style="padding:10px 24px;background:#95a5a6;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">閉じる</button>
   </div>
 </div>
 
@@ -1164,6 +1199,8 @@ async function doScore() {
                                 '😱 もはや別の生き物！？';
 
   document.getElementById('total-score-disp').textContent = total + '点';
+  const diffLabels2 = { hard: '👹 鬼モード', normal: '😊 通常モード', easy: '😄 イージーモード' };
+  document.getElementById('score-sub').textContent = `/ 100点満点（${diffLabels2[currentDifficulty] || '通常モード'}）`;
   document.getElementById('score-comment').textContent    = comment;
   document.getElementById('part-breakdown').innerHTML     = html;
   document.getElementById('name-input').value = '';
@@ -1200,6 +1237,10 @@ async function doScore() {
   } else {
     prizeSection.style.display = 'none';
   }
+  // フリーハンドキャンバスを保存（採点図鑑投稿用）
+  const fhC = document.getElementById('fh-canvas');
+  lastFreehandImage = fhC ? fhC.toDataURL('image/png') : null;
+
   renderResultCanvas();
   document.getElementById('score-modal').classList.add('show');
 }
@@ -1547,8 +1588,10 @@ async function scoreFreehandOverlap(key) {
   if (refPx === 0) return 0;
   const union = refPx + userPx - overlap;
   const iou = union > 0 ? overlap / union : 0;
-  // Score 0-20, use sqrt for gentler curve
-  return Math.round(20 * Math.min(1, iou * 1.8)); // 厳格化
+  // 難易度別 multiplier: 鬼=1.0(厳格), 通常=1.8(標準), イージー=2.8(甘め)
+  const multipliers = { hard: 1.0, normal: 1.8, easy: 2.8 };
+  const mult = multipliers[currentDifficulty] || 1.8;
+  return Math.round(20 * Math.min(1, iou * mult));
 }
 
 function drawAnswerComparison() {
@@ -1599,7 +1642,11 @@ async function saveScore() {
     fetch(WEBHOOK_URL, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ type: 'score', name, score: lastScore, instagram })
+      body: JSON.stringify({
+        type: 'score', name, score: lastScore, instagram,
+        difficulty: currentDifficulty,
+        image: lastFreehandImage
+      })
     }).catch(()=>{});
   }
   closeScoreModal();
@@ -1753,6 +1800,31 @@ document.getElementById('home-btn').addEventListener('click', () => {
   window.scrollTo(0, 0);
   document.getElementById('how-to-overlay').style.display = 'flex';
 });
+
+// ================================================================
+// 難易度設定
+// ================================================================
+let currentDifficulty = 'normal'; // 'hard' | 'normal' | 'easy'
+let lastFreehandImage = null;     // 採点時のフリーハンド画像（base64）
+
+function setDifficulty(diff, btn) {
+  currentDifficulty = diff;
+  // ボタンハイライト更新
+  const styles = {
+    hard:   { active: '#e74c3c', border: '#e74c3c' },
+    normal: { active: '#e67e22', border: '#e67e22' },
+    easy:   { active: '#27ae60', border: '#27ae60' }
+  };
+  ['hard','normal','easy'].forEach(d => {
+    const b = document.getElementById('diff-' + d);
+    if (!b) return;
+    const s = styles[d];
+    const isActive = d === diff;
+    b.style.background = isActive ? s.active : 'white';
+    b.style.color      = isActive ? 'white'  : s.active;
+    b.style.borderColor = s.border;
+  });
+}
 
 // ================================================================
 // モード選択してスタート
@@ -2162,10 +2234,7 @@ async function openZukan() {
 async function refreshZukan() {
   const btn = document.getElementById('zukan-refresh-btn');
   if (btn) { btn.textContent = '⏳ 更新中...'; btn.disabled = true; }
-  // キャッシュを無効化して再取得
-  zukanCache = null;
-  zukanFetchedAt = 0;
-  zukanPromise = null;
+  zukanCache = null; zukanFetchedAt = 0; zukanPromise = null;
   const list    = document.getElementById('zukan-list');
   const loading = document.getElementById('zukan-loading');
   const empty   = document.getElementById('zukan-empty');
@@ -2222,6 +2291,86 @@ function renderZukanList(list, empty, data) {
 
   // 残り投票数を表示
   updateVoteCounter();
+}
+
+// ================================================================
+// 採点チャレンジ図鑑（独立モーダル）
+// ================================================================
+let zukanScoringCache    = null;
+let zukanScoringPromise  = null;
+let zukanScoringFetchedAt = 0;
+
+async function openScoringZukan() {
+  document.getElementById('scoring-zukan-modal').classList.add('show');
+  await loadScoringZukan();
+}
+
+async function refreshScoringZukan() {
+  const btn = document.getElementById('scoring-zukan-refresh-btn');
+  if (btn) { btn.textContent = '⏳ 更新中...'; btn.disabled = true; }
+  zukanScoringCache = null; zukanScoringFetchedAt = 0; zukanScoringPromise = null;
+  await loadScoringZukan();
+  if (btn) { btn.textContent = '🔄 更新'; btn.disabled = false; }
+}
+
+function prefetchZukanScoring() {
+  if (zukanScoringPromise) return;
+  if (zukanScoringCache && Date.now() - zukanScoringFetchedAt < ZUKAN_TTL) return;
+  zukanScoringPromise = fetch(WEBHOOK_URL + '?type=zukanScoring')
+    .then(r => r.json())
+    .then(data => { zukanScoringCache = data; zukanScoringFetchedAt = Date.now(); zukanScoringPromise = null; })
+    .catch(() => { zukanScoringPromise = null; });
+}
+
+async function loadScoringZukan() {
+  const list    = document.getElementById('zukan-scoring-list');
+  const loading = document.getElementById('zukan-scoring-loading');
+  const empty   = document.getElementById('zukan-scoring-empty');
+  if (!list) return;
+
+  if (zukanScoringCache && Date.now() - zukanScoringFetchedAt < ZUKAN_TTL) {
+    loading.style.display = 'none';
+    renderScoringZukanList(list, empty, zukanScoringCache);
+    return;
+  }
+  list.innerHTML = '';
+  loading.style.display = 'block';
+  empty.style.display = 'none';
+  try {
+    if (!zukanScoringPromise) prefetchZukanScoring();
+    await zukanScoringPromise;
+    loading.style.display = 'none';
+    renderScoringZukanList(list, empty, zukanScoringCache);
+  } catch(e) {
+    loading.textContent = '読み込みに失敗しました';
+  }
+}
+
+function renderScoringZukanList(list, empty, data) {
+  list.innerHTML = '';
+  if (!data || data.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  const diffLabels = { hard: '👹 鬼', normal: '😊 通常', easy: '😄 イージー' };
+  data.forEach((entry, index) => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff5f0;border:2px solid #e67e22;border-radius:10px;padding:10px;text-align:center;';
+    const diffLabel = diffLabels[entry.difficulty] || '';
+    card.innerHTML = `
+      <div style="font-size:0.65rem;color:#aaa;margin-bottom:3px;">No.${String(index+1).padStart(3,'0')}</div>
+      ${entry.imageUrl
+        ? `<img src="${entry.imageUrl}" loading="lazy" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
+        : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎯</div>`
+      }
+      <div style="font-size:1.1rem;font-weight:bold;color:#e67e22;">${entry.score}点</div>
+      <div style="font-size:0.8rem;font-weight:bold;color:#333;margin:2px 0;">${entry.name || '名無し'}</div>
+      ${diffLabel ? `<div style="font-size:0.65rem;color:#aaa;">${diffLabel}</div>` : ''}
+      <div style="font-size:0.65rem;color:#bbb;">${entry.date || ''}</div>
+    `;
+    list.appendChild(card);
+  });
 }
 
 // ================================================================
