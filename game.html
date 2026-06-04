@@ -719,11 +719,19 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 <div class="modal-bg" id="rank-modal">
   <div class="modal-box">
     <h2>🏆 ランキング</h2>
-    <div style="display:flex;gap:8px;margin-bottom:8px;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
       <button id="rank-tab-current" onclick="switchRankTab('current')"
         style="flex:1;padding:7px;border:2px solid #9b59b6;background:#9b59b6;color:white;border-radius:8px;cursor:pointer;font-size:0.85rem;font-weight:bold;">今月</button>
       <button id="rank-tab-archive" onclick="switchRankTab('archive')"
         style="flex:1;padding:7px;border:2px solid #9b59b6;background:white;color:#9b59b6;border-radius:8px;cursor:pointer;font-size:0.85rem;">先月の結果</button>
+    </div>
+    <div style="display:flex;gap:5px;margin-bottom:6px;">
+      <button id="rank-diff-hard" onclick="switchRankDiff('hard')"
+        style="flex:1;padding:5px 4px;border:2px solid #e74c3c;background:#e74c3c;color:white;border-radius:8px;cursor:pointer;font-size:0.78rem;font-weight:bold;">👹 鬼</button>
+      <button id="rank-diff-normal" onclick="switchRankDiff('normal')"
+        style="flex:1;padding:5px 4px;border:2px solid #e67e22;background:white;color:#e67e22;border-radius:8px;cursor:pointer;font-size:0.78rem;">😊 通常</button>
+      <button id="rank-diff-easy" onclick="switchRankDiff('easy')"
+        style="flex:1;padding:5px 4px;border:2px solid #27ae60;background:white;color:#27ae60;border-radius:8px;cursor:pointer;font-size:0.78rem;">😄 イージー</button>
     </div>
     <div id="rank-note" style="font-size:0.75rem;color:#888;margin-bottom:6px;text-align:center;">毎月1日にリセット＆結果発表</div>
     <table id="ranking-table">
@@ -1225,34 +1233,31 @@ async function doScore() {
   document.getElementById('part-breakdown').innerHTML     = html;
   document.getElementById('name-input').value = '';
   lastScore = total;
-  // 賞品表示
+  // 賞品表示（鬼モードのみ・月末締め）
   const prizeSection = document.getElementById('prize-section');
   const prizeCode = document.getElementById('prize-code');
-  const code = 'OMB-' + Date.now().toString(36).slice(-4).toUpperCase();
-  prizeCode.textContent = code;
-  if (total >= 95) {
-    document.getElementById('prize-rank').textContent = '🏆 特賞おめでとう！！';
-    document.getElementById('prize-name').textContent = 'スペシャルプレゼント 🎁';
+  prizeCode.style.display = 'none';
+  if (currentDifficulty !== 'hard') {
+    prizeSection.style.display = 'none';
+  } else if (total >= 95) {
+    document.getElementById('prize-rank').textContent = '🏆 特賞圏内！！';
+    document.getElementById('prize-name').textContent = 'スペシャルプレゼント対象 🎁　月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#f6d365,#fda085)';
-    prizeCode.style.display = 'inline-block';
     prizeSection.style.display = 'block';
   } else if (total >= 80) {
-    document.getElementById('prize-rank').textContent = '🥇 1等賞おめでとう！';
-    document.getElementById('prize-name').textContent = '銘木キーホルダープレゼント 🎁';
+    document.getElementById('prize-rank').textContent = '🥇 1等賞圏内！';
+    document.getElementById('prize-name').textContent = '銘木キーホルダー対象 🎁　月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#fff9c4,#ffe082)';
-    prizeCode.style.display = 'inline-block';
     prizeSection.style.display = 'block';
   } else if (total >= 65) {
-    document.getElementById('prize-rank').textContent = '🥈 2等賞おめでとう！';
-    document.getElementById('prize-name').textContent = 'レザー調キーホルダープレゼント 🎁';
+    document.getElementById('prize-rank').textContent = '🥈 2等賞圏内！';
+    document.getElementById('prize-name').textContent = 'レザー調キーホルダー対象 🎁　月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#eceff1,#cfd8dc)';
-    prizeCode.style.display = 'inline-block';
     prizeSection.style.display = 'block';
   } else if (total >= 50) {
-    document.getElementById('prize-rank').textContent = '🥉 3等賞おめでとう！';
-    document.getElementById('prize-name').textContent = 'ショッピング500円オフクーポン 🎟️';
+    document.getElementById('prize-rank').textContent = '🥉 3等賞圏内！';
+    document.getElementById('prize-name').textContent = '500円オフクーポン対象 🎟️　月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#ffe0b2,#ffcc80)';
-    prizeCode.style.display = 'inline-block';
     prizeSection.style.display = 'block';
   } else {
     prizeSection.style.display = 'none';
@@ -1721,7 +1726,7 @@ async function scoreFreehandOverlap(key) {
   if (currentDifficulty === 'easy') {
     // イージー: recall基準（見本をどれだけカバーできたか）。50%カバーで満点
     const recall = overlap / refPx;
-    return Math.round(20 * Math.min(1, recall * 4.2));
+    return Math.round(20 * Math.min(1, recall * 7.0));
   }
   const union = refPx + userPx - overlap;
   const iou = union > 0 ? overlap / union : 0;
@@ -1796,27 +1801,44 @@ async function saveScore() {
 // ================================================================
 document.getElementById('rank-btn').addEventListener('click', () => showRanking('current'));
 
+let currentRankDiff = 'hard';
+
 async function showRanking(tab = 'current') {
   const tbody  = document.getElementById('ranking-tbody');
   const medals = ['🥇','🥈','🥉'];
   tbody.innerHTML = '<tr><td colspan="4" style="color:#aaa;padding:12px;">読み込み中...</td></tr>';
   document.getElementById('rank-modal').classList.add('show');
-  switchRankTab(tab, false); // タブ表示のみ更新（データはこの後取得）
+  switchRankTab(tab, false);
+  switchRankDiff(currentRankDiff, false);
 
   let scores = [];
   if (WEBHOOK_URL) {
     try {
       const type = tab === 'archive' ? 'archive' : 'ranking';
-      const res = await fetch(WEBHOOK_URL + '?type=' + type, { cache: 'no-store' });
+      const res = await fetch(WEBHOOK_URL + '?type=' + type + '&difficulty=' + currentRankDiff, { cache: 'no-store' });
       if (res.ok) scores = await res.json();
     } catch(e) {}
   }
   if (!scores.length && tab === 'current') {
-    scores = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
+    const all = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
+    scores = all.filter(s => (s.difficulty || 'normal') === currentRankDiff);
   }
   tbody.innerHTML = scores.length ? scores.map((s,i) =>
     `<tr><td>${medals[i]||i+1}</td><td>${esc(s.name)}</td><td>${s.score}点</td><td>${s.instagram ? '@'+esc(s.instagram) : (s.month||s.date||'')}</td></tr>`
   ).join('') : `<tr><td colspan="4" style="color:#aaa;padding:12px;">${tab==='archive'?'先月のデータがありません':'まだ記録がありません'}</td></tr>`;
+}
+
+function switchRankDiff(diff, reload = true) {
+  currentRankDiff = diff;
+  const colors = { hard: '#e74c3c', normal: '#e67e22', easy: '#27ae60' };
+  ['hard','normal','easy'].forEach(d => {
+    const b = document.getElementById('rank-diff-' + d);
+    if (!b) return;
+    const c = colors[d];
+    b.style.background = d === diff ? c : 'white';
+    b.style.color = d === diff ? 'white' : c;
+  });
+  if (reload) showRanking();
 }
 
 function switchRankTab(tab, reload = true) {
