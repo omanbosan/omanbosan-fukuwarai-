@@ -1720,12 +1720,12 @@ async function scoreFreehandOverlap(key) {
   if (currentDifficulty === 'easy') {
     // イージー: recall基準（見本をどれだけカバーできたか）。50%カバーで満点
     const recall = overlap / refPx;
-    return Math.round(20 * Math.min(1, recall * 2.8));
+    return Math.round(20 * Math.min(1, recall * 4.2));
   }
   const union = refPx + userPx - overlap;
   const iou = union > 0 ? overlap / union : 0;
-  // 難易度別 multiplier: 鬼=1.96, 通常=3.64
-  const multipliers = { hard: 1.96, normal: 3.64 };
+  // 難易度別 multiplier: 鬼=2.94, 通常=5.46
+  const multipliers = { hard: 2.94, normal: 5.46 };
   const mult = multipliers[currentDifficulty] || 2.6;
   return Math.round(20 * Math.min(1, iou * mult));
 }
