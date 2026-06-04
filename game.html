@@ -2488,20 +2488,26 @@ function renderScoringZukanList(list, empty, data) {
     return;
   }
   empty.style.display = 'none';
-  const diffLabels = { hard: '👹 鬼', normal: '😊 通常', easy: '😄 イージー' };
+  const diffLabels  = { hard: '👹 鬼モード', normal: '😊 通常', easy: '😄 イージー' };
+  const diffColors  = { hard: '#e74c3c', normal: '#e67e22', easy: '#27ae60' };
+  const diffBorders = { hard: '#e74c3c', normal: '#e67e22', easy: '#27ae60' };
   data.forEach((entry, index) => {
-    const card = document.createElement('div');
-    card.style.cssText = 'background:#fff5f0;border:2px solid #e67e22;border-radius:10px;padding:10px;text-align:center;';
-    const diffLabel = diffLabels[entry.difficulty] || '';
+    const diff  = entry.difficulty || 'normal';
+    const color = diffColors[diff]  || '#e67e22';
+    const label = diffLabels[diff]  || '';
+    const card  = document.createElement('div');
+    card.style.cssText = `background:#fff5f0;border:2px solid ${color};border-radius:10px;padding:10px;text-align:center;`;
     card.innerHTML = `
-      <div style="font-size:0.65rem;color:#aaa;margin-bottom:3px;">No.${String(index+1).padStart(3,'0')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div style="font-size:0.62rem;color:#bbb;">No.${String(index+1).padStart(3,'0')}</div>
+        ${label ? `<div style="font-size:0.65rem;font-weight:bold;color:white;background:${color};border-radius:6px;padding:2px 6px;">${label}</div>` : ''}
+      </div>
       ${entry.imageUrl
         ? `<img src="${entry.imageUrl}" loading="lazy" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
         : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎯</div>`
       }
-      <div style="font-size:1.1rem;font-weight:bold;color:#e67e22;">${entry.score}点</div>
+      <div style="font-size:1.1rem;font-weight:bold;color:${color};">${entry.score}点</div>
       <div style="font-size:0.8rem;font-weight:bold;color:#333;margin:2px 0;">${entry.name || '名無し'}</div>
-      ${diffLabel ? `<div style="font-size:0.65rem;color:#aaa;">${diffLabel}</div>` : ''}
       <div style="font-size:0.65rem;color:#bbb;">${entry.date || ''}</div>
     `;
     list.appendChild(card);
