@@ -201,6 +201,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   0% { transform: translateY(-10px) rotate(0deg); opacity:1; }
   100% { transform: translateY(110vh) rotate(360deg); opacity:0; }
 }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
 </style>
 <script>
   if (!sessionStorage.getItem('fwAuth')) location.replace('index.html');
@@ -351,7 +356,13 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       おまんぼさんの顔を覚えて、目隠し状態でフリーハンド描画！<br>
       見本との重なり具合で採点します。（100点満点）
     </div>
+    <!-- 鬼モードのみプレゼント案内 -->
+    <div style="background:linear-gradient(135deg,rgba(231,76,60,0.3),rgba(192,57,43,0.3));border:1.5px solid #e74c3c;border-radius:10px;padding:10px;margin-bottom:8px;text-align:center;">
+      <div style="font-size:0.85rem;font-weight:bold;color:#ff6b6b;margin-bottom:4px;">👹 鬼モードのみプレゼント対象！</div>
+      <div style="font-size:0.72rem;color:#eee;line-height:1.6;">通常・イージーモードはプレゼント対象外です<br>景品狙いは <b style="color:#ff6b6b;">鬼モード</b> に挑戦しよう🔥</div>
+    </div>
     <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:10px;font-size:0.8rem;line-height:2.2;">
+      <div style="font-size:0.7rem;color:#aaa;margin-bottom:4px;text-align:center;">🏆 鬼モード景品（月末締め・結果発表）</div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;">
         <span>🏆 <b style="color:#ffd700;">特賞</b></span><span style="color:#ffd700;font-size:0.75rem;">95点以上</span><span style="font-size:0.72rem;color:#aaa;">スペシャルプレゼント</span>
       </div>
@@ -458,8 +469,14 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px;">
       <div style="font-size:0.82rem;color:#555;margin-bottom:6px;text-align:center;">📋 ランキングに登録する</div>
       <input type="text" id="name-input" placeholder="ニックネーム（最大8文字）" maxlength="8"/>
-      <input type="text" id="score-instagram" placeholder="Instagramアカウント名（任意）"
-        style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:10px;font-family:inherit;"/>
+      <input type="text" id="score-instagram" placeholder="Instagramアカウント名（@なしでOK）"
+        style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:6px;font-family:inherit;"/>
+      <!-- フォロー必須チェック -->
+      <label id="follow-check-label" style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#c0392b;font-weight:bold;margin-bottom:4px;background:#fff3f3;border:1.5px solid #e74c3c;border-radius:8px;padding:8px 10px;cursor:pointer;">
+        <input type="checkbox" id="follow-check" style="margin-top:2px;width:16px;height:16px;accent-color:#e74c3c;flex-shrink:0;">
+        <span><a href="https://www.instagram.com/omanbosan.lv/" target="_blank" style="color:#e74c3c;font-weight:bold;">@omanbosan.lv</a> をフォロー済みです（必須）</span>
+      </label>
+      <div style="font-size:0.7rem;color:#e74c3c;margin-bottom:8px;text-align:center;">※ フォローしていない方はランキング登録できません</div>
       <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#555;margin-bottom:10px;">
         <input type="checkbox" id="consent-check">
         この作品の商業利用に同意する
@@ -1722,6 +1739,13 @@ function closeScoreModal() {
 // スコア保存（ローカル + GASバックエンドへ送信）
 // ================================================================
 async function saveScore() {
+  const followCheck = document.getElementById('follow-check');
+  if (followCheck && !followCheck.checked) {
+    document.getElementById('follow-check-label').style.animation = 'shake 0.3s ease';
+    setTimeout(() => { document.getElementById('follow-check-label').style.animation = ''; }, 400);
+    alert('@omanbosan.lv をフォローしてからチェックを入れてください 📷');
+    return;
+  }
   const name      = (document.getElementById('name-input').value.trim() || '名無し').slice(0,8);
   const instagram = (document.getElementById('score-instagram').value.trim().replace('@','') || '');
   const entry     = { name, score: lastScore, date: new Date().toLocaleDateString('ja-JP'), instagram };
