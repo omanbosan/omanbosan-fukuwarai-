@@ -1717,11 +1717,16 @@ async function scoreFreehandOverlap(key) {
     if (r && u) overlap++;
   }
   if (refPx === 0) return 0;
+  if (currentDifficulty === 'easy') {
+    // イージー: recall基準（見本をどれだけカバーできたか）。50%カバーで満点
+    const recall = overlap / refPx;
+    return Math.round(20 * Math.min(1, recall * 2.0));
+  }
   const union = refPx + userPx - overlap;
   const iou = union > 0 ? overlap / union : 0;
-  // 難易度別 multiplier（+20%緩和済み）: 鬼=1.2, 通常=2.2, イージー=3.4
-  const multipliers = { hard: 1.2, normal: 2.2, easy: 3.4 };
-  const mult = multipliers[currentDifficulty] || 2.2;
+  // 難易度別 multiplier: 鬼=1.4, 通常=2.6
+  const multipliers = { hard: 1.4, normal: 2.6 };
+  const mult = multipliers[currentDifficulty] || 2.6;
   return Math.round(20 * Math.min(1, iou * mult));
 }
 
