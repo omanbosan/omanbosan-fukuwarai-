@@ -229,8 +229,8 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <div class="tray-slot" id="slot-mouth"></div>
     </div>
     <div id="freehand-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#111; z-index:50; border-radius:16px;">
-      <!-- 指示テキスト（最前面・上部） -->
-      <div id="fh-instruction" style="position:absolute;top:0;left:0;right:0;z-index:3;font-size:0.95rem;font-weight:bold;text-align:center;padding:7px 8px 6px;color:white;background:rgba(0,0,0,0.55);border-radius:16px 16px 0 0;pointer-events:none;"></div>
+      <!-- 指示テキスト（髪エリアより下・顔下半分に配置） -->
+      <div id="fh-instruction" style="position:absolute;bottom:56px;left:6px;right:6px;z-index:3;font-size:0.88rem;font-weight:bold;text-align:center;padding:6px 10px;color:white;background:rgba(0,0,0,0.60);border-radius:10px;pointer-events:none;line-height:1.4;"></div>
       <!-- キャンバス（460×500 フルサイズ・座標系を採点と統一） -->
       <canvas id="fh-canvas" width="460" height="500" style="position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none;cursor:crosshair;"></canvas>
       <!-- ボタン（最前面・下部） -->
@@ -252,38 +252,51 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   </div>
 
   <div id="controls">
-    <h3>🎮 操作</h3>
-    <div id="peek-info">チラ見 残り <strong id="peek-left">3</strong> 回</div>
-    <button class="ctrl-btn btn-peek" id="peek-btn">👀 チラ見する<br><small>(2秒間)</small></button>
+    <!-- チラ見情報 -->
+    <div id="peek-info" style="font-size:0.75rem;text-align:center;padding:4px;background:#f0f0f0;border-radius:6px;">
+      👀 チラ見 残り <strong id="peek-left">3</strong> 回（2秒）
+    </div>
     <div id="peek-timer"><div id="peek-timer-bar"></div></div>
 
-    <!-- 回転・サイズコントロール -->
+    <!-- メインアクション（2列） -->
+    <div style="display:flex;gap:5px;">
+      <button class="ctrl-btn btn-peek" id="peek-btn" style="flex:1;font-size:0.82rem;padding:8px 4px;">👀 チラ見</button>
+      <button class="ctrl-btn btn-score" id="score-btn" style="flex:1;font-size:0.82rem;padding:8px 4px;">✅ 採点</button>
+    </div>
+    <button class="ctrl-btn btn-reset" id="reset-btn" style="font-size:0.82rem;padding:7px 6px;">🔄 描き直す</button>
+
+    <!-- 回転・サイズコントロール（非表示） -->
     <div id="rot-panel">
       <div id="rot-label">パーツをタップして選択</div>
-      <div style="font-size:0.65rem;color:#668;margin-bottom:3px;">📐 回転</div>
       <div class="ctrl-row">
-        <button class="rot-btn" id="rot-ccw" onclick="rotateSelected(-1)" disabled title="左に1°">↺ -1°</button>
-        <button class="rot-btn" id="rot-cw"  onclick="rotateSelected( 1)" disabled title="右に1°">↻ +1°</button>
+        <button class="rot-btn" id="rot-ccw" onclick="rotateSelected(-1)" disabled>↺ -1°</button>
+        <button class="rot-btn" id="rot-cw"  onclick="rotateSelected( 1)" disabled>↻ +1°</button>
       </div>
       <div class="ctrl-row">
-        <button class="rot-btn" id="rot-ccw10" onclick="rotateSelected(-10)" disabled title="左に10°">↺ -10°</button>
-        <button class="rot-btn" id="rot-cw10"  onclick="rotateSelected( 10)" disabled title="右に10°">↻ +10°</button>
+        <button class="rot-btn" id="rot-ccw10" onclick="rotateSelected(-10)" disabled>↺ -10°</button>
+        <button class="rot-btn" id="rot-cw10"  onclick="rotateSelected( 10)" disabled>↻ +10°</button>
       </div>
-      <div style="font-size:0.65rem;color:#668;margin-bottom:3px;margin-top:4px;">🔍 サイズ</div>
       <div class="ctrl-row">
         <button class="sz-btn" id="sz-down" onclick="scaleSelected(0.9)" disabled>－</button>
         <button class="sz-btn" id="sz-up"   onclick="scaleSelected(1.1)" disabled>＋</button>
       </div>
-      <div id="rot-hint">ドラッグ移動 / スクロール回転</div>
     </div>
 
-    <button class="ctrl-btn btn-score" id="score-btn">✅ 採点する！</button>
-    <button class="ctrl-btn btn-reset" id="reset-btn">🔄 描き直す</button>
-    <button class="ctrl-btn" id="home-btn" style="background:#7f8c8d;color:white;">🏠 トップへ戻る</button>
-    <button class="ctrl-btn btn-rank"  id="rank-btn">🏆 ランキング</button>
-    <button class="ctrl-btn" id="zukan-btn" style="background:#e67e22;color:white;" onclick="openScoringZukan()">🎯 採点図鑑</button>
-    <button class="ctrl-btn" style="background:#27ae60;color:white;" onclick="openZukan()">🎨 仲間図鑑</button>
-    <div id="placed-status">配置状況：</div>
+    <hr style="border:none;border-top:1px solid #eee;margin:2px 0;">
+
+    <!-- ナビ（2列） -->
+    <div style="display:flex;gap:5px;">
+      <button class="ctrl-btn" id="home-btn" style="flex:1;background:#7f8c8d;color:white;font-size:0.78rem;padding:7px 4px;">🏠 トップ</button>
+      <button class="ctrl-btn btn-rank" id="rank-btn" style="flex:1;font-size:0.78rem;padding:7px 4px;">🏆 ランキング</button>
+    </div>
+
+    <!-- 図鑑（2列） -->
+    <div style="display:flex;gap:5px;">
+      <button class="ctrl-btn" id="zukan-btn" style="flex:1;background:#e67e22;color:white;font-size:0.75rem;padding:6px 4px;" onclick="openScoringZukan()">🎯 採点図鑑</button>
+      <button class="ctrl-btn" style="flex:1;background:#27ae60;color:white;font-size:0.75rem;padding:6px 4px;" onclick="openZukan()">🎨 仲間図鑑</button>
+    </div>
+
+    <div id="placed-status" style="display:none;"></div>
   </div>
 </div>
 
@@ -1323,21 +1336,21 @@ async function startFhPart(index) {
     // イージー: 答え合わせ用の見本画像を半透明表示 + 過去ストローク
     await drawAnswerImageGuide(ctx);
     drawPastStrokes(ctx, index, '#c0392b');
-    instr.style.color      = '#333';
-    instr.style.background = 'rgba(255,240,200,0.85)';
+    instr.style.color      = '#7b2d00';
+    instr.style.background = 'rgba(255,235,190,0.92)';
     instr.innerHTML =
       `😄 【${labels[fhCurrentKey]}】を見本の上に描いてください`
-      + ` <small style="color:#888;">残り${remaining}パーツ</small>`;
+      + ` <small style="color:#a0522d;">残り${remaining}パーツ</small>`;
 
   } else if (currentDifficulty === 'normal') {
     // 通常: 白背景・顔の輪郭・自分の過去ストロークのみ
     drawFaceOutline(ctx);
     drawPastStrokes(ctx, index, '#222');
-    instr.style.color      = '#333';
-    instr.style.background = 'rgba(220,220,220,0.85)';
+    instr.style.color      = '#1a1a1a';
+    instr.style.background = 'rgba(200,200,200,0.88)';
     instr.innerHTML =
       `😊 【${labels[fhCurrentKey]}】を描いてください`
-      + ` <small style="color:#666;">残り${remaining}パーツ</small>`;
+      + ` <small style="color:#555;">残り${remaining}パーツ</small>`;
 
   } else {
     // 鬼: 真っ暗・何も見えない
@@ -1706,9 +1719,9 @@ async function scoreFreehandOverlap(key) {
   if (refPx === 0) return 0;
   const union = refPx + userPx - overlap;
   const iou = union > 0 ? overlap / union : 0;
-  // 難易度別 multiplier: 鬼=1.0(厳格), 通常=1.8(標準), イージー=2.8(甘め)
-  const multipliers = { hard: 1.0, normal: 1.8, easy: 2.8 };
-  const mult = multipliers[currentDifficulty] || 1.8;
+  // 難易度別 multiplier（+20%緩和済み）: 鬼=1.2, 通常=2.2, イージー=3.4
+  const multipliers = { hard: 1.2, normal: 2.2, easy: 3.4 };
+  const mult = multipliers[currentDifficulty] || 2.2;
   return Math.round(20 * Math.min(1, iou * mult));
 }
 
