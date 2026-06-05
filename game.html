@@ -1700,7 +1700,7 @@ async function scoreFreehandOverlap(key) {
   if (currentDifficulty === 'easy') {
     // イージー: recall基準（見本をどれだけカバーできたか）。50%カバーで満点
     const recall = overlap / refPx;
-    return Math.round(20 * Math.min(1, recall * 6.3));
+    return Math.round(20 * Math.min(1, recall * 7.0));
   }
   const union = refPx + userPx - overlap;
   const iou = union > 0 ? overlap / union : 0;
