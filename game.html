@@ -1239,11 +1239,11 @@ async function doScore() {
   } else {
     prizeSection.style.display = 'none';
   }
-  // フリーハンドキャンバスを保存（採点図鑑投稿用）
-  const fhC = document.getElementById('fh-canvas');
-  lastFreehandImage = fhC ? fhC.toDataURL('image/png') : null;
+  // 採点結果の合成画像を保存（全パーツ描画済みの完成画像）
+  await renderResultCanvas();
+  const cleanImg = document.getElementById('result-img-clean');
+  lastFreehandImage = (cleanImg && cleanImg.src && cleanImg.src.startsWith('data:')) ? cleanImg.src : null;
 
-  renderResultCanvas();
   document.getElementById('score-modal').classList.add('show');
 }
 
