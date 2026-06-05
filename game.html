@@ -1703,7 +1703,7 @@ async function scoreFreehandOverlap(key) {
   if (currentDifficulty === 'easy') {
     // イージー: recall基準（見本をどれだけカバーできたか）。50%カバーで満点
     const recall = overlap / refPx;
-    return Math.round(20 * Math.min(1, recall * 7.0));
+    return Math.round(20 * Math.min(1, recall * 6.3));
   }
   const union = refPx + userPx - overlap;
   const iou = union > 0 ? overlap / union : 0;
@@ -2514,7 +2514,7 @@ function renderScoringZukanList(list, empty, data) {
         ${label ? `<div style="font-size:0.65rem;font-weight:bold;color:white;background:${color};border-radius:6px;padding:2px 6px;">${label}</div>` : ''}
       </div>
       ${entry.imageUrl
-        ? `<img src="${entry.imageUrl}" loading="lazy" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
+        ? `<img src="${entry.imageUrl}" loading="lazy" style="width:80px;height:80px;border-radius:50%;object-fit:cover;object-position:50% 25%;display:block;margin:0 auto 6px;" onerror="this.style.display='none'">`
         : `<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.8rem;">🎯</div>`
       }
       <div style="font-size:1.1rem;font-weight:bold;color:${color};">${entry.score}点</div>
