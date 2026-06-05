@@ -1939,7 +1939,13 @@ function resetGameState() {
 
 // 描き直す（カウントダウンからやり直し）
 document.getElementById('reset-btn').addEventListener('click', () => {
+  const wasFreehand = freehandMode || document.getElementById('mode-draw').classList.contains('active');
   resetGameState();
+  // フリーハンドモードで描き直す場合はmode-drawをアクティブに戻す
+  if (wasFreehand) {
+    document.getElementById('mode-draw').classList.add('active');
+    document.getElementById('mode-place').classList.remove('active');
+  }
   startCountdown();
 });
 
