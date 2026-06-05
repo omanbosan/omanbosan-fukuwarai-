@@ -454,7 +454,6 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <div id="prize-rank" style="font-size:1.4rem; font-weight:bold; color:#c0392b; margin-bottom:4px;"></div>
       <div id="prize-name" style="font-size:1rem; margin:4px 0;"></div>
       <div id="prize-code" style="display:none; font-size:1.3rem; font-weight:bold; color:#c0392b; letter-spacing:3px; margin:8px 0; background:white; padding:8px 16px; border-radius:8px;"></div>
-      <div style="font-size:0.75rem; color:#7f0000; margin-top:6px;">📲 このスクリーンショットをスタッフに見せてね！</div>
     </div>
 
     <!-- パーツ内訳（折りたたみ） -->
@@ -1225,22 +1224,22 @@ async function doScore() {
     prizeSection.style.display = 'none';
   } else if (total >= 95) {
     document.getElementById('prize-rank').textContent = '🏆 特賞圏内！！';
-    document.getElementById('prize-name').textContent = 'スペシャルプレゼント対象 🎁　月末締めで結果発表！';
+    document.getElementById('prize-name').textContent = '月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#f6d365,#fda085)';
     prizeSection.style.display = 'block';
   } else if (total >= 80) {
     document.getElementById('prize-rank').textContent = '🥇 1等賞圏内！';
-    document.getElementById('prize-name').textContent = '銘木キーホルダー対象 🎁　月末締めで結果発表！';
+    document.getElementById('prize-name').textContent = '月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#fff9c4,#ffe082)';
     prizeSection.style.display = 'block';
   } else if (total >= 65) {
     document.getElementById('prize-rank').textContent = '🥈 2等賞圏内！';
-    document.getElementById('prize-name').textContent = 'レザー調キーホルダー対象 🎁　月末締めで結果発表！';
+    document.getElementById('prize-name').textContent = '月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#eceff1,#cfd8dc)';
     prizeSection.style.display = 'block';
   } else if (total >= 50) {
     document.getElementById('prize-rank').textContent = '🥉 3等賞圏内！';
-    document.getElementById('prize-name').textContent = '500円オフクーポン対象 🎟️　月末締めで結果発表！';
+    document.getElementById('prize-name').textContent = '月末締めで結果発表！';
     prizeSection.style.background = 'linear-gradient(135deg,#ffe0b2,#ffcc80)';
     prizeSection.style.display = 'block';
   } else {
