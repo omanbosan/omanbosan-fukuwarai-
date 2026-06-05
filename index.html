@@ -2,99 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
+  <meta http-equiv="refresh" content="0; url=game.html">
   <title>おまんぼさんイラストゲーム</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #ffecd2, #fcb69f);
-      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
-    }
-    .login-box {
-      background: white;
-      border-radius: 20px;
-      padding: 40px 36px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.15);
-      text-align: center;
-      width: 90%;
-      max-width: 360px;
-    }
-    .login-box h1 {
-      font-size: 1.3rem;
-      color: #c0392b;
-      margin-bottom: 6px;
-    }
-    .login-box p {
-      font-size: 0.85rem;
-      color: #888;
-      margin-bottom: 28px;
-    }
-    .login-box input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      text-align: center;
-      letter-spacing: 4px;
-      outline: none;
-      transition: border 0.2s;
-      margin-bottom: 16px;
-    }
-    .login-box input:focus { border-color: #e67e22; }
-    .login-box button {
-      width: 100%;
-      padding: 13px;
-      background: #e67e22;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .login-box button:hover { background: #d35400; }
-    .error-msg {
-      color: #e74c3c;
-      font-size: 0.85rem;
-      margin-top: 10px;
-      min-height: 20px;
-    }
-    .emoji { font-size: 2.8rem; margin-bottom: 12px; }
-  </style>
 </head>
 <body>
-  <div class="login-box">
-    <div class="emoji">🎨</div>
-    <h1>おまんぼさんイラストゲーム</h1>
-    <p>テスト中です。パスワードを入力してください</p>
-    <input type="password" id="pw" placeholder="パスワード" autofocus
-      onkeydown="if(event.key==='Enter')checkPw()">
-    <button onclick="checkPw()">入る →</button>
-    <div class="error-msg" id="err"></div>
-  </div>
-  <script>
-    function checkPw() {
-      const val = document.getElementById('pw').value;
-      if (val === 'omanbo') {
-        sessionStorage.setItem('fwAuth', '1');
-        location.href = 'game.html';
-      } else {
-        const err = document.getElementById('err');
-        err.textContent = 'パスワードが違います';
-        document.getElementById('pw').value = '';
-        document.getElementById('pw').focus();
-        setTimeout(() => err.textContent = '', 2000);
-      }
-    }
-  </script>
+  <script>location.replace('game.html');</script>
 </body>
 </html>
