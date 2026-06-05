@@ -297,7 +297,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 
     <!-- 図鑑（2列） -->
     <div style="display:flex;gap:5px;">
-      <button class="ctrl-btn" id="zukan-btn" style="flex:1;background:#e67e22;color:white;font-size:0.75rem;padding:6px 4px;" onclick="openScoringZukan()">🎯 採点図鑑</button>
+      <button class="ctrl-btn" id="zukan-btn" style="flex:1;background:#e67e22;color:white;font-size:0.75rem;padding:6px 4px;" onclick="openScoringZukan()">🎯 みんなのおまんぼさん</button>
       <button class="ctrl-btn" style="flex:1;background:#27ae60;color:white;font-size:0.75rem;padding:6px 4px;" onclick="openZukan()">🎨 お友達図鑑</button>
     </div>
 
@@ -336,7 +336,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <!-- 図鑑ボタン群（最上部） -->
   <div style="display:flex;gap:8px;width:100%;margin-bottom:16px;">
     <button onclick="openScoringZukan()" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,#e67e22,#c0392b);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.3);line-height:1.4;">
-      🎯 採点チャレンジ図鑑<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">みんなの採点結果</span>
+      🎯 みんなが書いたおまんぼさん<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">採点チャレンジ結果</span>
     </button>
     <button onclick="openZukan()" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,#27ae60,#1e8449);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(39,174,96,0.3);line-height:1.4;">
       🎨 おまんぼさんのお友達図鑑<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">お絵描きチャレンジ</span>
@@ -496,7 +496,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <img id="result-img-clean" src="" alt="採点結果（見本なし）" style="display:block;margin:4px auto;max-width:100%;border-radius:10px;border:1px solid #ddd;" />
       <button id="share-btn" style="display:block;margin:8px auto;padding:8px 20px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">📤 LINEやSNSでシェア</button>
       <div id="share-result" style="display:none; margin:8px auto; text-align:center; font-size:0.8rem; color:#555;"></div>
-      <button onclick="closeScoreModal();openScoringZukan();" style="display:block;margin:8px auto;padding:8px 20px;background:#e67e22;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">🎯 採点チャレンジ図鑑を見る</button>
+      <button onclick="closeScoreModal();openScoringZukan();" style="display:block;margin:8px auto;padding:8px 20px;background:#e67e22;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">🎯 みんなが書いたおまんぼさんを見る</button>
     </div>
   </div>
 </div>
@@ -668,11 +668,11 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
 <div class="modal-bg" id="scoring-zukan-modal">
   <div class="modal-box" style="max-width:480px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <h2 style="color:#e67e22;margin:0;">🎯 採点チャレンジ図鑑</h2>
+      <h2 style="color:#e67e22;margin:0;">🎯 みんなが書いたおまんぼさん</h2>
       <button onclick="refreshScoringZukan()" id="scoring-zukan-refresh-btn"
         style="padding:6px 12px;background:#e67e22;color:white;border:none;border-radius:20px;font-size:0.8rem;cursor:pointer;">🔄 更新</button>
     </div>
-    <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">みんなが描いたおまんぼさんの採点結果</p>
+    <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">みんなが書いたおまんぼさんと採点結果</p>
     <div id="zukan-scoring-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
     <div id="zukan-scoring-loading" style="text-align:center;padding:20px;color:#888;font-size:0.9rem;">読み込み中...</div>
     <div id="zukan-scoring-empty" style="display:none;text-align:center;padding:20px;color:#aaa;font-size:0.85rem;">まだ採点結果がありません。</div>
