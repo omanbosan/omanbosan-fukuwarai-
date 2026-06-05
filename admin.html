@@ -236,8 +236,10 @@ async function loadData() {
   document.getElementById('empty').style.display = 'none';
   try {
     const type = currentMode === 'scoring' ? 'pendingScores' : 'pending';
-    const res  = await fetch(WEBHOOK_URL + '?type=' + type);
-    allData = await res.json();
+    const res  = await fetch(WEBHOOK_URL + '?type=' + type, { redirect: 'follow' });
+    const text = await res.text();
+    allData = JSON.parse(text);
+    if (!Array.isArray(allData)) allData = [];
     if (currentMode === 'drawing') applyFlags();
     updateBadges();
     renderCards();
