@@ -333,10 +333,10 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   <!-- 図鑑ボタン群（最上部） -->
   <div style="display:flex;gap:8px;width:100%;margin-bottom:16px;">
     <button onclick="openScoringZukan()" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,#e67e22,#c0392b);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(230,126,34,0.3);line-height:1.4;">
-      🎯 みんなが書いたおまんぼさん<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">採点チャレンジ結果</span>
+      🎯 みんなが書いた<br>おまんぼさん<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">採点チャレンジ結果</span>
     </button>
     <button onclick="openZukan()" style="flex:1;padding:12px 8px;background:linear-gradient(135deg,#27ae60,#1e8449);color:white;border:none;border-radius:12px;font-size:0.88rem;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(39,174,96,0.3);line-height:1.4;">
-      🎨 おまんぼさんのお友達図鑑<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">お絵描きチャレンジ</span>
+      🎨 おまんぼさんの<br>お友達図鑑<br><span style="font-size:0.68rem;font-weight:normal;opacity:0.9;">お絵描きチャレンジ</span>
     </button>
   </div>
 
@@ -350,7 +350,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       </div>
     </div>
     <div style="font-size:0.82rem;line-height:1.7;color:#eee;margin-bottom:12px;">
-      おまんぼさんの顔を覚えて、目隠し状態でフリーハンド描画！<br>
+      おまんぼさんの顔を覚えて、フリーハンドで描画！<br>
       見本との重なり具合で採点します。（100点満点）
     </div>
     <!-- 鬼モードのみプレゼント案内 -->
@@ -1096,14 +1096,24 @@ function startCountdown() {
   const msgEl   = document.getElementById('start-msg');
   overlay.style.display = 'flex';
   let n = 3; cntEl.textContent = n;
-  msgEl.textContent = 'カウントダウン後に目隠し開始！';
+  // イージーモードはカウントダウンなしで即スタート
+  if (currentDifficulty === 'easy') {
+    overlay.style.display = 'none';
+    if (document.getElementById('mode-draw').classList.contains('active')) {
+      startFreehandMode();
+      setupFhCanvas();
+    }
+    return;
+  }
+
+  msgEl.textContent = 'カウントダウン後にスタート！';
   const t = setInterval(() => {
     n--;
     if (n <= 0) {
       clearInterval(t);
       cntEl.textContent = 'スタート！';
       cntEl.style.fontSize = 'clamp(1.4rem, 8vw, 4rem)';
-      msgEl.textContent = '目隠しスタート！';
+      msgEl.textContent = 'スタート！';
       setTimeout(() => {
         overlay.style.display = 'none';
         // フリーハンドモードが選択されていれば自動開始
@@ -1338,7 +1348,7 @@ async function startFhPart(index) {
     instr.style.background = 'rgba(0,0,0,0.55)';
     instr.innerHTML =
       `👹 【${labels[fhCurrentKey]}】を描いてください`
-      + ` <small style="opacity:0.5;">残り${remaining}パーツ（目隠し）</small>`;
+      + ` <small style="opacity:0.5;">残り${remaining}パーツ</small>`;
   }
 
   // 現在の描画スタイルをセット
