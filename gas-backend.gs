@@ -20,8 +20,8 @@ const CONFIG = {
 function doGet(e) {
   try {
     const type = e && e.parameter && e.parameter.type;
-    if (type === 'ranking')      return buildResponse(getRanking());
-    if (type === 'archive')      return buildResponse(getLastMonthRanking());
+    if (type === 'ranking')      return buildResponse(getRanking(e.parameter.difficulty));
+    if (type === 'archive')      return buildResponse(getLastMonthRanking(e.parameter.difficulty));
     if (type === 'zukan')        return buildResponse(getZukan());
     if (type === 'zukanScoring') return buildResponse(getZukanScoring());
     if (type === 'pending')        return buildResponse(getPending());
@@ -55,13 +55,14 @@ function buildResponse(obj) {
 // ----------------------------------------------------------------
 // 今月のランキング
 // ----------------------------------------------------------------
-function getRanking() {
+function getRanking(difficulty) {
   const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
   const sheet = ss.getSheetByName('scores');
   if (!sheet || sheet.getLastRow() < 2) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues()
-    .map(r => ({ name: r[0], score: Number(r[1]), date: r[2], instagram: r[3] || '' }))
-    .filter(r => r.name && r.score > 0)
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
+    .map(r => ({ name: r[0], score: Number(r[1]), date: r[2], instagram: r[3] || '', difficulty: r[5] || 'normal', approved: r[6] || '' }))
+    .filter(r => r.name && r.score > 0 && r.approved !== '却下')
+    .filter(r => !difficulty || r.difficulty === difficulty)
     .sort((a, b) => b.score - a.score)
     .slice(0, 20);
 }
@@ -69,18 +70,19 @@ function getRanking() {
 // ----------------------------------------------------------------
 // 先月のランキング（アーカイブから取得）
 // ----------------------------------------------------------------
-function getLastMonthRanking() {
+function getLastMonthRanking(difficulty) {
   const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
   const sheet = ss.getSheetByName('scores_archive');
   if (!sheet || sheet.getLastRow() < 2) return [];
 
   // 最新の月ラベルを取得
-  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues();
   const latestMonth = rows[rows.length - 1][0];
 
   return rows
     .filter(r => r[0] === latestMonth)
-    .map(r => ({ month: r[0], name: r[2], score: Number(r[3]), instagram: r[4] || '' }))
+    .filter(r => !difficulty || (r[5] || 'normal') === difficulty)
+    .map(r => ({ month: r[0], name: r[2], score: Number(r[3]), instagram: r[4] || '', difficulty: r[5] || 'normal' }))
     .sort((a, b) => b.score - a.score);
 }
 
