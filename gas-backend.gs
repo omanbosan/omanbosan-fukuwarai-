@@ -24,7 +24,8 @@ function doGet(e) {
     if (type === 'archive')      return buildResponse(getLastMonthRanking());
     if (type === 'zukan')        return buildResponse(getZukan());
     if (type === 'zukanScoring') return buildResponse(getZukanScoring());
-    if (type === 'pending')      return buildResponse(getPending());
+    if (type === 'pending')        return buildResponse(getPending());
+    if (type === 'pendingScores')  return buildResponse(getPendingScores());
     return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.8' });
   } catch(err) {
     return buildResponse({ error: err.message });
@@ -174,6 +175,27 @@ function getPending() {
       igShow:      r[9] === true || r[9] === 'TRUE'
     }))
     .filter(r => r.villageName);
+}
+
+// scores シートの審査待ちエントリ（管理画面用）
+// scores列: 名前(1), スコア(2), 日付(3), Instagram(4), imageUrl(5), 難易度(6), 承認(7)
+function getPendingScores() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('scores');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
+    .map((r, i) => ({
+      row:        i + 2,
+      name:       r[0] || '名無し',
+      score:      Number(r[1]) || 0,
+      date:       r[2] ? String(r[2]).slice(0, 10) : '',
+      instagram:  (r[3] || '').replace('@', ''),
+      imageUrl:   driveUrlToThumb(r[4]),
+      difficulty: r[5] || 'normal',
+      approved:   r[6] || '審査中'
+    }))
+    .filter(r => r.name);
 }
 
 // ----------------------------------------------------------------
