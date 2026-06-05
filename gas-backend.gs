@@ -274,11 +274,13 @@ function saveDrawing(data) {
   if (colCount < 6) sheet.getRange(1, 6).setValue('ひとこと');
   if (colCount < 7) sheet.getRange(1, 7).setValue('図鑑No');
   if (colCount < 8) sheet.getRange(1, 8).setValue('承認');
-  if (colCount < 9) sheet.getRange(1, 9).setValue('ペンネーム');
+  if (colCount < 9)  sheet.getRange(1, 9).setValue('ペンネーム');
   if (colCount < 10) sheet.getRange(1, 10).setValue('IG表示');
+  if (colCount < 11) sheet.getRange(1, 11).setValue('著作権同意日時');
 
-  const zukanNo  = Math.max(sheet.getLastRow(), 1);
-  const rowIndex = sheet.getLastRow() + 1;
+  const consentAt = data.consentAt || '';
+  const zukanNo   = Math.max(sheet.getLastRow(), 1);
+  const rowIndex  = sheet.getLastRow() + 1;
   sheet.appendRow([
     ig ? '@' + ig : '',
     new Date().toLocaleString('ja-JP'),
@@ -289,7 +291,8 @@ function saveDrawing(data) {
     zukanNo,
     '審査中',
     penname,
-    igShow
+    igShow,
+    consentAt
   ]);
 
   // 2. Drive に保存

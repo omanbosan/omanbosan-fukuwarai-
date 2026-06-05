@@ -613,9 +613,16 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <span>Instagramアカウント名を図鑑にも表示する</span>
     </label>
 
-    <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.8rem;cursor:pointer;line-height:1.4;">
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.8rem;cursor:pointer;line-height:1.4;margin-bottom:6px;">
       <input type="checkbox" id="odekaki-follow-check" onchange="updateOdekakiSubmitBtn()" style="margin-top:2px;flex-shrink:0;">
       <span><a href="https://www.instagram.com/omanbosan.lv/" target="_blank" style="color:#27ae60;font-weight:bold;">@omanbosan.lv</a> をフォロー済みです</span>
+    </label>
+
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.8rem;cursor:pointer;line-height:1.5;background:#fff8e1;border:1.5px solid #f39c12;border-radius:8px;padding:8px 10px;">
+      <input type="checkbox" id="odekaki-consent-check" onchange="updateOdekakiSubmitBtn()" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:#e67e22;">
+      <span><b style="color:#e67e22;">著作権・肖像権に同意する（必須）</b><br>
+        <span style="font-size:0.72rem;color:#888;">投稿した作品の著作権はおまんぼさん運営に帰属し、商業利用・SNS掲載等に同意します。</span>
+      </span>
     </label>
   </div>
   <button id="odekaki-save-btn" onclick="saveOdekakiImage()" disabled
@@ -2233,8 +2240,9 @@ function updateOdekakiSubmitBtn() {
   const name    = (document.getElementById('odekaki-name').value || '').trim();
   const penname = (document.getElementById('odekaki-penname').value || '').trim();
   const checked = document.getElementById('odekaki-follow-check').checked;
+  const consent = document.getElementById('odekaki-consent-check').checked;
   const btn     = document.getElementById('odekaki-save-btn');
-  const ok = name.length > 0 && penname.length > 0 && checked;
+  const ok = name.length > 0 && penname.length > 0 && checked && consent;
   btn.disabled = !ok;
   btn.style.opacity = ok ? '1' : '0.5';
   btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
@@ -2247,7 +2255,8 @@ async function saveOdekakiImage() {
   const ig          = (document.getElementById('odekaki-instagram').value || '').trim().replace('@','');
   const igShow      = document.getElementById('odekaki-ig-show').checked;
   const followed    = document.getElementById('odekaki-follow-check').checked;
-  if (!villageName || !penname || !followed) {
+  const consented   = document.getElementById('odekaki-consent-check').checked;
+  if (!villageName || !penname || !followed || !consented) {
     alert('キャラクター名・作者ペンネーム・フォロー確認をすべて入力してください');
     return;
   }
@@ -2300,7 +2309,8 @@ async function saveOdekakiImage() {
           penname: penname,
           villageName: villageName,
           comment: comment,
-          image: dataUrl
+          image: dataUrl,
+          consentAt: new Date().toLocaleString('ja-JP')
         })
       });
     } catch(e) {}
