@@ -463,10 +463,10 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     </details>
 
     <!-- 登録フォーム（スクロール不要の位置） -->
-    <div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px;">
+    <div id="score-register-section" style="border-top:1px solid #eee;margin-top:12px;padding-top:12px;">
       <div style="font-size:0.82rem;color:#555;margin-bottom:6px;text-align:center;">📋 ランキングに登録する</div>
       <input type="text" id="name-input" placeholder="ニックネーム（最大8文字）" maxlength="8"/>
-      <input type="text" id="score-instagram" placeholder="Instagramアカウント名（@なしでOK）"
+      <input type="text" id="score-instagram" placeholder="Instagramアカウント名（必須・@なしでOK）"
         style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:6px;font-family:inherit;"/>
       <!-- フォロー必須チェック -->
       <label id="follow-check-label" style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#c0392b;font-weight:bold;margin-bottom:4px;background:#fff3f3;border:1.5px solid #e74c3c;border-radius:8px;padding:8px 10px;cursor:pointer;">
@@ -1215,7 +1215,11 @@ async function doScore() {
   document.getElementById('score-comment').textContent    = comment;
   document.getElementById('part-breakdown').innerHTML     = html;
   document.getElementById('name-input').value = '';
+  document.getElementById('score-instagram').value = '';
   lastScore = total;
+  // 登録フォームは鬼モードのみ表示
+  const registerSection = document.getElementById('score-register-section');
+  if (registerSection) registerSection.style.display = currentDifficulty === 'hard' ? '' : 'none';
   // 賞品表示（鬼モードのみ・月末締め）
   const prizeSection = document.getElementById('prize-section');
   const prizeCode = document.getElementById('prize-code');
@@ -1762,6 +1766,14 @@ async function saveScore() {
   }
   const name      = (document.getElementById('name-input').value.trim() || '名無し').slice(0,8);
   const instagram = (document.getElementById('score-instagram').value.trim().replace('@','') || '');
+  if (!instagram) {
+    const igInput = document.getElementById('score-instagram');
+    igInput.style.border = '2px solid #e74c3c';
+    igInput.focus();
+    alert('Instagramアカウント名を入力してください（必須）📷');
+    setTimeout(() => { igInput.style.border = '2px solid #ddd'; }, 2000);
+    return;
+  }
   const entry     = { name, score: lastScore, date: new Date().toLocaleDateString('ja-JP'), instagram };
   // ローカルに保存（オフライン対応）
   const local = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
