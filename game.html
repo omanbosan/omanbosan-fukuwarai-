@@ -467,19 +467,20 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
       <div style="font-size:0.82rem;color:#555;margin-bottom:6px;text-align:center;">📋 ランキングに登録する</div>
       <input type="text" id="name-input" placeholder="ニックネーム（最大8文字）" maxlength="8"/>
       <input type="text" id="score-instagram" placeholder="Instagramアカウント名（必須・@なしでOK）"
-        style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:6px;font-family:inherit;"/>
+        style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:6px;font-family:inherit;"
+        oninput="updateScoreRegisterBtn()"/>
       <!-- フォロー必須チェック -->
       <label id="follow-check-label" style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#c0392b;font-weight:bold;margin-bottom:4px;background:#fff3f3;border:1.5px solid #e74c3c;border-radius:8px;padding:8px 10px;cursor:pointer;">
-        <input type="checkbox" id="follow-check" style="margin-top:2px;width:16px;height:16px;accent-color:#e74c3c;flex-shrink:0;">
+        <input type="checkbox" id="follow-check" style="margin-top:2px;width:16px;height:16px;accent-color:#e74c3c;flex-shrink:0;" onchange="updateScoreRegisterBtn()">
         <span><a href="https://www.instagram.com/omanbosan.lv/" target="_blank" style="color:#e74c3c;font-weight:bold;">@omanbosan.lv</a> をフォロー済みです（必須）</span>
       </label>
       <div style="font-size:0.7rem;color:#e74c3c;margin-bottom:8px;text-align:center;">※ フォローしていない方はランキング登録できません</div>
       <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#555;margin-bottom:10px;">
-        <input type="checkbox" id="consent-check">
-        この作品の商業利用に同意する
+        <input type="checkbox" id="consent-check" onchange="updateScoreRegisterBtn()">
+        この作品の商業利用に同意する（必須）
       </label>
       <div class="btn-row">
-        <button onclick="saveScore()" style="background:#27ae60;color:white;">🏆 登録！</button>
+        <button id="score-register-btn" onclick="saveScore()" disabled style="background:#95a5a6;color:white;cursor:not-allowed;opacity:0.5;">🏆 登録！</button>
         <button onclick="closeScoreModal()" style="background:#95a5a6;color:white;">戻る</button>
       </div>
     </div>
@@ -1220,6 +1221,12 @@ async function doScore() {
   // 登録フォームは鬼モードのみ表示
   const registerSection = document.getElementById('score-register-section');
   if (registerSection) registerSection.style.display = currentDifficulty === 'hard' ? '' : 'none';
+  // チェックボックスとボタンをリセット
+  const followCheck = document.getElementById('follow-check');
+  const consentCheck = document.getElementById('consent-check');
+  if (followCheck) followCheck.checked = false;
+  if (consentCheck) consentCheck.checked = false;
+  updateScoreRegisterBtn();
   // 賞品表示（鬼モードのみ・月末締め）
   const prizeSection = document.getElementById('prize-section');
   const prizeCode = document.getElementById('prize-code');
@@ -1756,6 +1763,19 @@ function closeScoreModal() {
 // ================================================================
 // スコア保存（ローカル + GASバックエンドへ送信）
 // ================================================================
+function updateScoreRegisterBtn() {
+  const ig      = (document.getElementById('score-instagram').value || '').trim();
+  const follow  = document.getElementById('follow-check').checked;
+  const consent = document.getElementById('consent-check').checked;
+  const btn     = document.getElementById('score-register-btn');
+  if (!btn) return;
+  const ok = ig.length > 0 && follow && consent;
+  btn.disabled = !ok;
+  btn.style.background  = ok ? '#27ae60' : '#95a5a6';
+  btn.style.cursor      = ok ? 'pointer'  : 'not-allowed';
+  btn.style.opacity     = ok ? '1'        : '0.5';
+}
+
 async function saveScore() {
   const followCheck = document.getElementById('follow-check');
   if (followCheck && !followCheck.checked) {
