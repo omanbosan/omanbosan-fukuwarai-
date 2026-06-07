@@ -1435,19 +1435,23 @@ async function drawAnswerImageGuide(ctx) {
   });
 }
 
+// イベントリスナーの重複登録を防ぐフラグ
+let _fhCanvasInitialized = false;
+
 function setupFhCanvas() {
   const canvas = document.getElementById('fh-canvas');
   const ctx = canvas.getContext('2d');
-  // strokeStyle/lineWidthは startFhPart で難易度別にセット
 
+  // ── 座標変換: play-canvas の getBoundingClientRect + _gameScale を使用
+  // （iOS Safari でも親要素の CSS transform を正しく反映させるため）
   function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const src = e.touches ? e.touches[0] : e;
-    const scaleX = canvas.width  / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const rect = document.getElementById('play-canvas').getBoundingClientRect();
+    const src  = (e.touches && e.touches.length > 0) ? e.touches[0]
+               : (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0]
+               : e;
     return {
-      x: (src.clientX - rect.left) * scaleX,
-      y: (src.clientY - rect.top)  * scaleY
+      x: (src.clientX - rect.left) / _gameScale,
+      y: (src.clientY - rect.top)  / _gameScale
     };
   }
 
@@ -1455,7 +1459,6 @@ function setupFhCanvas() {
     e.preventDefault();
     fhDrawing = true;
     fhCurrentStroke = [];
-    // 難易度別の線色（startFhPart でセット済みだが念のため同期）
     ctx.strokeStyle = currentDifficulty === 'hard' ? '#ffffff'
                     : (currentDifficulty === 'easy' ? '#c0392b' : '#222222');
     ctx.lineWidth = 8;
@@ -1490,12 +1493,16 @@ function setupFhCanvas() {
     document.getElementById('fh-redo-btn').style.display = 'inline-block';
   }
 
-  canvas.addEventListener('mousedown', onStart);
-  canvas.addEventListener('mousemove', onMove);
-  canvas.addEventListener('mouseup', onEnd);
-  canvas.addEventListener('touchstart', onStart, { passive: false });
-  canvas.addEventListener('touchmove', onMove, { passive: false });
-  canvas.addEventListener('touchend', onEnd, { passive: false });
+  // イベントリスナーは最初の1回だけ登録する（重複防止）
+  if (!_fhCanvasInitialized) {
+    canvas.addEventListener('mousedown', onStart);
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mouseup',   onEnd);
+    canvas.addEventListener('touchstart', onStart, { passive: false });
+    canvas.addEventListener('touchmove',  onMove,  { passive: false });
+    canvas.addEventListener('touchend',   onEnd,   { passive: false });
+    _fhCanvasInitialized = true;
+  }
 }
 
 function renderFreehandStrokes() {
