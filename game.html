@@ -1362,8 +1362,22 @@ async function startFhPart(index) {
       + ` <small style="color:#555;">残り${remaining}パーツ</small>`;
 
   } else {
-    // 鬼: 真っ暗・何も見えない
+    // 鬼: 最初の2秒だけ輪郭位置をチラ見せ → その後真っ暗
     instr.style.color      = 'white';
+    instr.style.background = 'rgba(180,0,0,0.75)';
+    instr.innerHTML =
+      `👹 位置をよく見て！ <small style="opacity:0.8;">2秒後に消えます…</small>`;
+
+    // 2秒間: 答え位置を半透明表示し、描画を無効化
+    fhDrawing = false;
+    canvas.style.pointerEvents = 'none';
+    await drawAnswerImageGuide(ctx);
+
+    await new Promise(res => setTimeout(res, 2000));
+
+    // 2秒後: 消してから描画開始
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.style.pointerEvents = '';
     instr.style.background = 'rgba(0,0,0,0.55)';
     instr.innerHTML =
       `👹 【${labels[fhCurrentKey]}】を描いてください`
