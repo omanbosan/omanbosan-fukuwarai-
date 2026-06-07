@@ -163,6 +163,10 @@ body {
     <p>おまんぼさん図鑑 承認管理</p>
     <input type="password" id="admin-pw" placeholder="管理者パスワード" autofocus
       onkeydown="if(event.key==='Enter')adminLogin()">
+    <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:#aaa;margin-bottom:14px;cursor:pointer;justify-content:center;">
+      <input type="checkbox" id="remember-me" checked style="width:15px;height:15px;">
+      このブラウザでログイン状態を保持する
+    </label>
     <button onclick="adminLogin()">ログイン →</button>
     <div class="login-err" id="login-err"></div>
   </div>
@@ -192,6 +196,7 @@ body {
         </button>
       </div>
       <button class="reload-btn" onclick="loadData()">🔄 更新</button>
+      <button onclick="adminLogout()" style="padding:7px 14px;background:#e74c3c;color:white;border:none;border-radius:20px;font-size:0.85rem;cursor:pointer;">🚪 ログアウト</button>
     </div>
   </div>
 
@@ -211,14 +216,25 @@ let currentTab  = 'pending';
 let currentMode = 'drawing'; // 'drawing' | 'scoring'
 
 // ================================================================
-// ログイン
+// ログイン（セッション保持対応）
 // ================================================================
+const SESSION_KEY = 'omanbo_admin_session';
+const SESSION_DAYS = 30; // ログイン保持日数
+
+function showAdminScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+  loadData();
+}
+
 function adminLogin() {
   const val = document.getElementById('admin-pw').value;
   if (val === ADMIN_PW) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-screen').style.display = 'block';
-    loadData();
+    if (document.getElementById('remember-me').checked) {
+      const expiry = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ expiry }));
+    }
+    showAdminScreen();
   } else {
     const err = document.getElementById('login-err');
     err.textContent = 'パスワードが違います';
@@ -226,6 +242,28 @@ function adminLogin() {
     setTimeout(() => err.textContent = '', 2000);
   }
 }
+
+function adminLogout() {
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-pw').value = '';
+}
+
+// ページ読み込み時：セッションが有効なら自動ログイン
+(function checkSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      const { expiry } = JSON.parse(raw);
+      if (expiry && Date.now() < expiry) {
+        showAdminScreen();
+        return;
+      }
+      localStorage.removeItem(SESSION_KEY);
+    }
+  } catch(e) { localStorage.removeItem(SESSION_KEY); }
+})();
 
 // ================================================================
 // データ取得
