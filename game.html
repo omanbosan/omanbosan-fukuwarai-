@@ -201,6 +201,10 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
   0% { transform: translateY(-10px) rotate(0deg); opacity:1; }
   100% { transform: translateY(110vh) rotate(360deg); opacity:0; }
 }
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
 @keyframes shake {
   0%,100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
@@ -2542,44 +2546,69 @@ function prefetchZukanScoring() {
     .catch(() => { zukanScoringPromise = null; });
 }
 
+const SCORING_ZUKAN_PAGE_SIZE = 20; // 1ページの表示件数
+let scoringZukanPage = 0;           // 現在表示済みページ数
+
 async function loadScoringZukan() {
   const list    = document.getElementById('zukan-scoring-list');
   const loading = document.getElementById('zukan-scoring-loading');
   const empty   = document.getElementById('zukan-scoring-empty');
   if (!list) return;
 
+  scoringZukanPage = 0; // 開くたびに先頭から
+
   if (zukanScoringCache && Date.now() - zukanScoringFetchedAt < ZUKAN_TTL) {
     loading.style.display = 'none';
     renderScoringZukanList(list, empty, zukanScoringCache);
     return;
   }
-  list.innerHTML = '';
-  loading.style.display = 'block';
+
+  // スケルトン表示（データ到着前に骨格を見せる）
+  list.innerHTML = Array(6).fill(0).map(() => `
+    <div style="background:#fff5f0;border:2px solid #eee;border-radius:10px;padding:10px;text-align:center;">
+      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200%;animation:shimmer 1.2s infinite;margin:0 auto 8px;"></div>
+      <div style="width:40px;height:14px;background:#eee;border-radius:4px;margin:0 auto 6px;"></div>
+      <div style="width:60px;height:12px;background:#eee;border-radius:4px;margin:0 auto;"></div>
+    </div>
+  `).join('');
+  loading.style.display = 'none';
   empty.style.display = 'none';
+
   try {
     if (!zukanScoringPromise) prefetchZukanScoring();
     await zukanScoringPromise;
-    loading.style.display = 'none';
+    list.innerHTML = '';
     renderScoringZukanList(list, empty, zukanScoringCache);
   } catch(e) {
+    list.innerHTML = '';
     loading.textContent = '読み込みに失敗しました';
+    loading.style.display = 'block';
   }
 }
 
 function renderScoringZukanList(list, empty, data) {
   list.innerHTML = '';
+  // もっと見るボタンがあれば削除
+  const oldMore = document.getElementById('scoring-zukan-more-btn');
+  if (oldMore) oldMore.remove();
+
   if (!data || data.length === 0) {
     empty.style.display = 'block';
     return;
   }
   empty.style.display = 'none';
-  const diffLabels  = { hard: '👹 鬼モード', normal: '😊 通常', easy: '😄 イージー' };
-  const diffColors  = { hard: '#e74c3c', normal: '#e67e22', easy: '#27ae60' };
-  const diffBorders = { hard: '#e74c3c', normal: '#e67e22', easy: '#27ae60' };
-  data.forEach((entry, index) => {
+
+  const diffLabels = { hard: '👹 鬼モード', normal: '😊 通常', easy: '😄 イージー' };
+  const diffColors = { hard: '#e74c3c', normal: '#e67e22', easy: '#27ae60' };
+
+  // 表示するのはページ分だけ
+  const end = (scoringZukanPage + 1) * SCORING_ZUKAN_PAGE_SIZE;
+  const slice = data.slice(0, end);
+
+  slice.forEach((entry, index) => {
     const diff  = entry.difficulty || 'normal';
-    const color = diffColors[diff]  || '#e67e22';
-    const label = diffLabels[diff]  || '';
+    const color = diffColors[diff] || '#e67e22';
+    const label = diffLabels[diff] || '';
     const card  = document.createElement('div');
     card.style.cssText = `background:#fff5f0;border:2px solid ${color};border-radius:10px;padding:10px;text-align:center;`;
     card.innerHTML = `
@@ -2597,6 +2626,19 @@ function renderScoringZukanList(list, empty, data) {
     `;
     list.appendChild(card);
   });
+
+  // まだ残りがあれば「もっと見る」ボタンを追加
+  if (data.length > end) {
+    const moreBtn = document.createElement('button');
+    moreBtn.id = 'scoring-zukan-more-btn';
+    moreBtn.textContent = `もっと見る（残り${data.length - end}件）`;
+    moreBtn.style.cssText = 'grid-column:1/-1;width:100%;padding:12px;background:#e67e22;color:white;border:none;border-radius:10px;font-size:0.9rem;font-weight:bold;cursor:pointer;margin-top:4px;';
+    moreBtn.onclick = () => {
+      scoringZukanPage++;
+      renderScoringZukanList(list, empty, data);
+    };
+    list.appendChild(moreBtn);
+  }
 }
 
 // ================================================================
@@ -2857,6 +2899,8 @@ window.addEventListener('load', () => {
   }, 120);
   // 図鑑データをバックグラウンドで先読み（GASコールドスタート対策）
   setTimeout(prefetchZukan, 1500);
+  // 採点図鑑も先読み（こちらの方が重いので早めに開始）
+  setTimeout(prefetchZukanScoring, 2500);
   // オープニング画面の星パーティクル初期化
   initOpeningStars();
 });
