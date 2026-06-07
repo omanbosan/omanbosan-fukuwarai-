@@ -808,11 +808,18 @@ const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycby0q8MVbN-Dk_fio8XO
 let _gameScale = 1;
 
 function applyGameScale() {
-  const maxW = Math.min(460, window.innerWidth - 16);
+  // iPadなど幅600px以上の端末は大きく表示（最大700px）、スマホは460px上限
+  const isTablet = window.innerWidth >= 600;
+  const maxAllowed = isTablet
+    ? Math.min(700, window.innerHeight - 220) // 縦方向にも収まるよう制限
+    : 460;
+  const maxW = Math.min(maxAllowed, window.innerWidth - 24);
   _gameScale = maxW / 460;
   const canvas = document.getElementById('play-canvas');
   const wrap   = document.getElementById('canvas-wrap');
-  if (_gameScale < 1) {
+
+  // スケールが1以外（拡大・縮小ともに）はtransformで調整
+  if (Math.abs(_gameScale - 1) > 0.005) {
     canvas.style.transform       = `scale(${_gameScale})`;
     canvas.style.transformOrigin = 'top left';
     const scaledW = 460 * _gameScale;
@@ -820,13 +827,11 @@ function applyGameScale() {
     wrap.style.width    = scaledW + 'px';
     wrap.style.height   = scaledH + 'px';
     wrap.style.overflow = 'hidden';
-    // 中央揃え
     wrap.style.marginLeft  = 'auto';
     wrap.style.marginRight = 'auto';
     wrap.style.display = 'block';
-    // fh-canvasはplay-canvas内にあり親のtransformで既にスケールされるので個別リサイズ不要
   } else {
-    canvas.style.transform      = '';
+    canvas.style.transform       = '';
     canvas.style.transformOrigin = '';
     wrap.style.width      = '';
     wrap.style.height     = '';
