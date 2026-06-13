@@ -109,11 +109,11 @@ function saveScore(data) {
   const score      = Number(data.score) || 0;
   const instagram  = (data.instagram || '').replace('@', '');
   const difficulty = data.difficulty || 'normal';
-  const verifyCode = String(data.verifyCode || '');
+  const entryId    = String(data.entryId || '');
   const rowIndex   = sheet.getLastRow() + 1;
 
   sheet.appendRow([name, score, new Date().toLocaleDateString('ja-JP'), instagram,
-                   'Drive保存中...', difficulty, '審査中', verifyCode]);
+                   'Drive保存中...', difficulty, '審査中', entryId]);
 
   // Drive に画像を保存
   if (data.image) {
@@ -134,8 +134,7 @@ function saveScore(data) {
     sheet.getRange(rowIndex, 5).setValue('');
   }
 
-  const entryNo = rowIndex - 1; // データ行番号（ヘッダー除く）
-  return { ok: true, entryNo: entryNo, entryId: 'S-' + String(entryNo).padStart(4, '0') };
+  return { ok: true, entryId };
 }
 
 // ----------------------------------------------------------------
@@ -285,7 +284,7 @@ function saveDrawing(data) {
   if (colCount < 12) sheet.getRange(1, 12).setValue('照合コード');
 
   const consentAt  = data.consentAt || '';
-  const verifyCode = String(data.verifyCode || '');
+  const entryId    = String(data.entryId || '');
   const zukanNo    = Math.max(sheet.getLastRow(), 1);
   const rowIndex   = sheet.getLastRow() + 1;
   sheet.appendRow([
@@ -300,7 +299,7 @@ function saveDrawing(data) {
     penname,
     igShow,
     consentAt,
-    verifyCode
+    entryId
   ]);
 
   // 2. Drive に保存
@@ -316,14 +315,11 @@ function saveDrawing(data) {
 
     // 3. シートのURLを更新
     sheet.getRange(rowIndex, 3).setValue(fileUrl);
-    const entryNo = rowIndex - 1;
-    return { ok: true, fileUrl, entryNo, entryId: 'D-' + String(entryNo).padStart(4, '0') };
+    return { ok: true, fileUrl, entryId };
   } catch(err) {
-    // Drive保存失敗でもシートにエラーを記録
     sheet.getRange(rowIndex, 3).setValue('Drive保存失敗: ' + err.message);
     sheet.getRange(rowIndex, 4).setValue('エラー');
-    const entryNo2 = rowIndex - 1;
-    return { error: err.message, entryNo: entryNo2, entryId: 'D-' + String(entryNo2).padStart(4, '0') };
+    return { error: err.message, entryId };
   }
 }
 
