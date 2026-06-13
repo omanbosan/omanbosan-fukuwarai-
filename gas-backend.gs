@@ -26,6 +26,7 @@ function doGet(e) {
     if (type === 'zukanScoring') return buildResponse(getZukanScoring());
     if (type === 'pending')        return buildResponse(getPending());
     if (type === 'pendingScores')  return buildResponse(getPendingScores());
+    if (type === 'voteRanking')    return buildResponse(getVoteRanking());
     return buildResponse({ ok: true, message: 'おまんぼさんイラストゲームAPI v1.8' });
   } catch(err) {
     return buildResponse({ error: err.message });
@@ -41,6 +42,7 @@ function doPost(e) {
     if (data.type === 'score')      return buildResponse(saveScore(data));
     if (data.type === 'drawing')    return buildResponse(saveDrawing(data));
     if (data.type === 'setApproval') return buildResponse(setApproval(data));
+    if (data.type === 'vote')       return buildResponse(castVote(data));
     return buildResponse({ ok: true });
   } catch(err) {
     return buildResponse({ error: err.message });
@@ -323,6 +325,51 @@ function saveDrawing(data) {
     sheet.getRange(rowIndex, 4).setValue('エラー');
     return { error: err.message, entryId };
   }
+}
+
+// ----------------------------------------------------------------
+// 投票（図鑑の投票数をvotesシートに記録）
+// votes列: no, villageName, count, lastVote
+// ----------------------------------------------------------------
+function castVote(data) {
+  const no          = Number(data.no) || 0;
+  const villageName = String(data.villageName || '');
+  if (!no) return { error: 'no entry no' };
+
+  const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
+  let sheet = ss.getSheetByName('votes');
+  if (!sheet) {
+    sheet = ss.insertSheet('votes');
+    sheet.appendRow(['no', '村人名', '票数', '最終投票日']);
+    sheet.setFrozenRows(1);
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2) {
+    const rows = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+    for (let i = 0; i < rows.length; i++) {
+      if (Number(rows[i][0]) === no) {
+        const newCount = Number(rows[i][2]) + 1;
+        sheet.getRange(i + 2, 3).setValue(newCount);
+        sheet.getRange(i + 2, 4).setValue(new Date().toLocaleDateString('ja-JP'));
+        return { ok: true, no, count: newCount };
+      }
+    }
+  }
+  // 新規
+  sheet.appendRow([no, villageName, 1, new Date().toLocaleDateString('ja-JP')]);
+  return { ok: true, no, count: 1 };
+}
+
+// 投票ランキング取得
+function getVoteRanking() {
+  const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('votes');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues()
+    .map(r => ({ no: Number(r[0]), villageName: r[1] || '', count: Number(r[2]) || 0, lastVote: String(r[3] || '') }))
+    .filter(r => r.no > 0)
+    .sort((a, b) => b.count - a.count);
 }
 
 // ----------------------------------------------------------------

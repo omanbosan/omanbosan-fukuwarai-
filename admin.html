@@ -94,29 +94,30 @@ body {
 
 .btn-row { display: flex; gap: 8px; }
 .btn-approve {
-  flex: 1; padding: 10px; background: #27ae60; color: white;
-  border: none; border-radius: 8px; font-size: 0.9rem; font-weight: bold;
-  cursor: pointer; transition: background 0.2s;
+  flex: 1; padding: 8px; background: transparent; color: #27ae60;
+  border: 1.5px solid #27ae60; border-radius: 8px; font-size: 0.85rem; font-weight: bold;
+  cursor: pointer; transition: all 0.2s;
 }
-.btn-approve:hover { background: #219a52; }
+.btn-approve:hover { background: #27ae60; color: white; }
 .btn-reject {
-  flex: 1; padding: 10px; background: #e74c3c; color: white;
-  border: none; border-radius: 8px; font-size: 0.9rem; font-weight: bold;
-  cursor: pointer; transition: background 0.2s;
+  flex: 1; padding: 8px; background: transparent; color: #e74c3c;
+  border: 1.5px solid #e74c3c; border-radius: 8px; font-size: 0.85rem; font-weight: bold;
+  cursor: pointer; transition: all 0.2s;
 }
-.btn-reject:hover { background: #c0392b; }
+.btn-reject:hover { background: #e74c3c; color: white; }
 .btn-undo {
-  flex: 1; padding: 10px; background: #7f8c8d; color: white;
-  border: none; border-radius: 8px; font-size: 0.85rem;
-  cursor: pointer;
+  flex: 1; padding: 8px; background: transparent; color: #888;
+  border: 1.5px solid #555; border-radius: 8px; font-size: 0.82rem;
+  cursor: pointer; transition: all 0.2s;
 }
+.btn-undo:hover { background: #555; color: white; }
 .btn-flag {
-  width: 100%; padding: 8px; margin-top: 6px;
-  border: none; border-radius: 8px; font-size: 0.85rem;
-  cursor: pointer; transition: background 0.2s;
-  background: #ecf0f1; color: #555;
+  width: 100%; padding: 7px; margin-top: 6px;
+  border: 1.5px solid #555; border-radius: 8px; font-size: 0.82rem;
+  cursor: pointer; transition: all 0.2s;
+  background: transparent; color: #888;
 }
-.btn-flag.flagged { background: #e67e22; color: white; }
+.btn-flag.flagged { border-color: #e67e22; color: #e67e22; }
 .flag-bar {
   background: rgba(230,126,34,0.15);
   border: 1.5px solid #e67e22;
@@ -182,7 +183,9 @@ body {
         <button id="mode-drawing" onclick="switchMode('drawing')"
           style="padding:6px 12px;border:2px solid #27ae60;background:#27ae60;color:white;border-radius:8px;font-size:0.82rem;font-weight:bold;cursor:pointer;">🎨 お友達</button>
         <button id="mode-scoring" onclick="switchMode('scoring')"
-          style="padding:6px 12px;border:2px solid #e67e22;background:white;color:#e67e22;border-radius:8px;font-size:0.82rem;font-weight:bold;cursor:pointer;">🎯 採点</button>
+          style="padding:6px 12px;border:2px solid #e67e22;background:transparent;color:#e67e22;border-radius:8px;font-size:0.82rem;font-weight:bold;cursor:pointer;">🎯 採点</button>
+        <button id="mode-vote" onclick="switchMode('vote')"
+          style="padding:6px 12px;border:2px solid #9b59b6;background:transparent;color:#9b59b6;border-radius:8px;font-size:0.82rem;font-weight:bold;cursor:pointer;">🏆 投票</button>
       </div>
       <div class="tab-bar">
         <button class="tab-btn active" id="tab-pending"  onclick="switchTab('pending')">
@@ -213,6 +216,24 @@ body {
   <div id="loading">読み込み中...</div>
   <div id="empty">該当するデータがありません</div>
   <div class="card-grid" id="card-grid"></div>
+
+  <!-- 投票ランキングテーブル -->
+  <div id="vote-table-wrap" style="display:none;">
+    <div id="vote-loading" style="text-align:center;padding:40px;color:#888;">読み込み中...</div>
+    <table id="vote-table" style="display:none;width:100%;border-collapse:collapse;font-size:0.9rem;">
+      <thead>
+        <tr style="background:#16213e;color:#e67e22;text-align:left;">
+          <th style="padding:10px 8px;border-bottom:2px solid #2a2a4a;">順位</th>
+          <th style="padding:10px 8px;border-bottom:2px solid #2a2a4a;">村人名</th>
+          <th style="padding:10px 8px;border-bottom:2px solid #2a2a4a;">No.</th>
+          <th style="padding:10px 8px;border-bottom:2px solid #2a2a4a;text-align:right;">票数</th>
+          <th style="padding:10px 8px;border-bottom:2px solid #2a2a4a;">最終投票日</th>
+        </tr>
+      </thead>
+      <tbody id="vote-tbody"></tbody>
+    </table>
+    <div id="vote-empty" style="display:none;text-align:center;padding:40px;color:#666;">まだ投票データがありません</div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -223,7 +244,7 @@ const ADMIN_PW    = 'luke1227mb'; // ← 管理者パスワード
 
 let allData    = [];
 let currentTab  = 'pending';
-let currentMode = 'drawing'; // 'drawing' | 'scoring'
+let currentMode = 'drawing'; // 'drawing' | 'scoring' | 'vote'
 
 // ================================================================
 // ログイン（セッション保持対応）
@@ -279,9 +300,14 @@ function adminLogout() {
 // データ取得
 // ================================================================
 async function loadData() {
+  if (currentMode === 'vote') {
+    loadVoteRanking();
+    return;
+  }
   document.getElementById('loading').style.display = 'block';
   document.getElementById('card-grid').innerHTML = '';
   document.getElementById('empty').style.display = 'none';
+  document.getElementById('vote-table-wrap').style.display = 'none';
   try {
     const type = currentMode === 'scoring' ? 'pendingScores' : 'pending';
     const res  = await fetch(WEBHOOK_URL + '?type=' + type, { redirect: 'follow' });
@@ -296,17 +322,69 @@ async function loadData() {
   }
 }
 
+async function loadVoteRanking() {
+  document.getElementById('card-grid').innerHTML = '';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('empty').style.display = 'none';
+  document.getElementById('vote-table-wrap').style.display = 'block';
+  document.getElementById('vote-loading').style.display = 'block';
+  document.getElementById('vote-table').style.display = 'none';
+  document.getElementById('vote-empty').style.display = 'none';
+  // タブバー非表示
+  document.querySelector('.tab-bar').style.display = 'none';
+  document.getElementById('search-entry').parentElement.style.display = 'none';
+  try {
+    const res  = await fetch(WEBHOOK_URL + '?type=voteRanking', { redirect: 'follow' });
+    const data = await res.json();
+    document.getElementById('vote-loading').style.display = 'none';
+    if (!Array.isArray(data) || data.length === 0) {
+      document.getElementById('vote-empty').style.display = 'block';
+      return;
+    }
+    const medals = ['🥇','🥈','🥉'];
+    const tbody = document.getElementById('vote-tbody');
+    tbody.innerHTML = '';
+    data.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.style.cssText = `background:${i%2===0?'#16213e':'#1a1a2e'};border-bottom:1px solid #2a2a4a;`;
+      const bar = '█'.repeat(Math.min(r.count, 20));
+      tr.innerHTML = `
+        <td style="padding:10px 8px;font-size:1.1rem;">${medals[i] || (i+1)}</td>
+        <td style="padding:10px 8px;font-weight:bold;color:#f39c12;">${r.villageName || '（名前なし）'}</td>
+        <td style="padding:10px 8px;color:#888;font-family:monospace;">No.${r.no}</td>
+        <td style="padding:10px 8px;text-align:right;">
+          <span style="color:#e67e22;font-size:0.75rem;font-family:monospace;">${bar}</span>
+          <span style="color:white;font-weight:bold;margin-left:6px;">${r.count}票</span>
+        </td>
+        <td style="padding:10px 8px;color:#666;font-size:0.8rem;">${r.lastVote}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('vote-table').style.display = 'table';
+  } catch(e) {
+    document.getElementById('vote-loading').textContent = '読み込みに失敗しました';
+  }
+}
+
 function switchMode(mode) {
   currentMode = mode;
   const dm = document.getElementById('mode-drawing');
   const sm = document.getElementById('mode-scoring');
-  if (mode === 'drawing') {
-    dm.style.background = '#27ae60'; dm.style.color = 'white';
-    sm.style.background = 'white';   sm.style.color = '#e67e22';
-  } else {
-    sm.style.background = '#e67e22'; sm.style.color = 'white';
-    dm.style.background = 'white';   dm.style.color = '#27ae60';
-  }
+  const vm = document.getElementById('mode-vote');
+  // ボタン状態リセット
+  dm.style.background = 'transparent'; dm.style.color = '#27ae60';
+  sm.style.background = 'transparent'; sm.style.color = '#e67e22';
+  vm.style.background = 'transparent'; vm.style.color = '#9b59b6';
+  if (mode === 'drawing') { dm.style.background = '#27ae60'; dm.style.color = 'white'; }
+  if (mode === 'scoring') { sm.style.background = '#e67e22'; sm.style.color = 'white'; }
+  if (mode === 'vote')    { vm.style.background = '#9b59b6'; vm.style.color = 'white'; }
+
+  // タブバー・検索は drawing/scoring のみ表示
+  const showTabs = mode !== 'vote';
+  document.querySelector('.tab-bar').style.display = showTabs ? '' : 'none';
+  const searchWrap = document.getElementById('search-entry')?.parentElement;
+  if (searchWrap) searchWrap.style.display = showTabs ? '' : 'none';
+
   currentTab = 'pending';
   ['pending','approved','rejected'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t === 'pending');

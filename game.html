@@ -2756,6 +2756,13 @@ function castZukanVote(entryNo, btn) {
   if (total >= 3) return;     // 3票使い切り
   votes[entryNo] = (votes[entryNo] || 0) + 1;
   saveMyVotes(votes);
+  // GASにも送信（fire-and-forget）
+  const entry = zukanCache && zukanCache.find(e => e.no === entryNo);
+  fetch(WEBHOOK_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ type: 'vote', no: entryNo, villageName: entry ? entry.villageName : '' })
+  }).catch(() => {});
   // ボタン更新
   btn.textContent = '❤️ 投票済み';
   btn.style.background = '#e67e22';
