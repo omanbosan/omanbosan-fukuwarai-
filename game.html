@@ -2601,7 +2601,7 @@ function renderZukanList(list, empty, data) {
         color:${alreadyVoted ? 'white' : (canVote ? '#e67e22' : '#aaa')};
         border:1px solid ${alreadyVoted ? '#e67e22' : (canVote ? '#e67e22' : '#ddd')};"
         ${(!canVote && !alreadyVoted) ? 'disabled' : ''}>
-        ${alreadyVoted ? '❤️ 投票済み' : (canVote ? '🤍 投票する' : '🤍 投票')}
+        ${alreadyVoted ? '❤️ 取り消す' : (canVote ? '🤍 投票する' : '🤍 投票')}
       </button>
     `;
     list.appendChild(card);
@@ -2751,35 +2751,61 @@ function saveMyVotes(v) { localStorage.setItem(voteKey(), JSON.stringify(v)); }
 
 function castZukanVote(entryNo, btn) {
   const votes = getMyVotes();
-  const total = Object.values(votes).reduce((s,v)=>s+v,0);
-  if (votes[entryNo]) return; // すでに投票済み
-  if (total >= 3) return;     // 3票使い切り
-  votes[entryNo] = (votes[entryNo] || 0) + 1;
-  saveMyVotes(votes);
-  // GASにも送信（fire-and-forget）
   const entry = zukanCache && zukanCache.find(e => e.no === entryNo);
-  fetch(WEBHOOK_URL, {
-    method: 'POST', mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ type: 'vote', no: entryNo, villageName: entry ? entry.villageName : '' })
-  }).catch(() => {});
-  // ボタン更新
-  btn.textContent = '❤️ 投票済み';
-  btn.style.background = '#e67e22';
-  btn.style.color = 'white';
-  btn.style.borderColor = '#e67e22';
-  // 残り投票数更新
-  updateVoteCounter();
-  // 3票使い切ったら他のボタンも無効化
-  const newTotal = Object.values(votes).reduce((s,v)=>s+v,0);
-  if (newTotal >= 3) {
-    document.querySelectorAll('#zukan-list button:not([style*="e67e22"])').forEach(b => {
-      b.disabled = true;
-      b.style.background = '#eee';
-      b.style.color = '#aaa';
-      b.style.borderColor = '#ddd';
+
+  if (votes[entryNo]) {
+    // 取り消し
+    delete votes[entryNo];
+    saveMyVotes(votes);
+    fetch(WEBHOOK_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'unvote', no: entryNo, villageName: entry ? entry.villageName : '' })
+    }).catch(() => {});
+    // ボタンを未投票状態に戻す
+    btn.textContent = '🤍 投票する';
+    btn.style.background = '#fff3e0';
+    btn.style.color = '#e67e22';
+    btn.style.borderColor = '#e67e22';
+    btn.disabled = false;
+    // 他の無効ボタンも復活
+    document.querySelectorAll('#zukan-list button').forEach(b => {
+      if (!b.style.background.includes('e67e22')) {
+        b.disabled = false;
+        b.style.background = '#fff3e0';
+        b.style.color = '#e67e22';
+        b.style.borderColor = '#e67e22';
+      }
     });
+  } else {
+    // 新規投票
+    const total = Object.values(votes).reduce((s,v)=>s+v,0);
+    if (total >= 3) return;
+    votes[entryNo] = 1;
+    saveMyVotes(votes);
+    fetch(WEBHOOK_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'vote', no: entryNo, villageName: entry ? entry.villageName : '' })
+    }).catch(() => {});
+    btn.textContent = '❤️ 取り消す';
+    btn.style.background = '#e67e22';
+    btn.style.color = 'white';
+    btn.style.borderColor = '#e67e22';
+    // 3票使い切ったら他のボタンも無効化
+    const newTotal = Object.values(votes).reduce((s,v)=>s+v,0);
+    if (newTotal >= 3) {
+      document.querySelectorAll('#zukan-list button').forEach(b => {
+        if (!b.style.background.includes('e67e22')) {
+          b.disabled = true;
+          b.style.background = '#eee';
+          b.style.color = '#aaa';
+          b.style.borderColor = '#ddd';
+        }
+      });
+    }
   }
+  updateVoteCounter();
 }
 
 function updateVoteCounter() {

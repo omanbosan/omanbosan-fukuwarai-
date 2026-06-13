@@ -43,6 +43,7 @@ function doPost(e) {
     if (data.type === 'drawing')    return buildResponse(saveDrawing(data));
     if (data.type === 'setApproval') return buildResponse(setApproval(data));
     if (data.type === 'vote')       return buildResponse(castVote(data));
+    if (data.type === 'unvote')     return buildResponse(castVote({ ...data, delta: -1 }));
     return buildResponse({ ok: true });
   } catch(err) {
     return buildResponse({ error: err.message });
@@ -334,6 +335,7 @@ function saveDrawing(data) {
 function castVote(data) {
   const no          = Number(data.no) || 0;
   const villageName = String(data.villageName || '');
+  const delta       = Number(data.delta) || 1; // +1 or -1
   if (!no) return { error: 'no entry no' };
 
   const ss  = SpreadsheetApp.openById(CONFIG.sheetId);
@@ -349,16 +351,19 @@ function castVote(data) {
     const rows = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
     for (let i = 0; i < rows.length; i++) {
       if (Number(rows[i][0]) === no) {
-        const newCount = Number(rows[i][2]) + 1;
+        const newCount = Math.max(0, Number(rows[i][2]) + delta);
         sheet.getRange(i + 2, 3).setValue(newCount);
         sheet.getRange(i + 2, 4).setValue(new Date().toLocaleDateString('ja-JP'));
         return { ok: true, no, count: newCount };
       }
     }
   }
-  // 新規
-  sheet.appendRow([no, villageName, 1, new Date().toLocaleDateString('ja-JP')]);
-  return { ok: true, no, count: 1 };
+  // 新規（取り消しの場合は登録しない）
+  if (delta > 0) {
+    sheet.appendRow([no, villageName, 1, new Date().toLocaleDateString('ja-JP')]);
+    return { ok: true, no, count: 1 };
+  }
+  return { ok: true, no, count: 0 };
 }
 
 // 投票ランキング取得
