@@ -132,7 +132,8 @@ function saveScore(data) {
     sheet.getRange(rowIndex, 5).setValue('');
   }
 
-  return { ok: true };
+  const entryNo = rowIndex - 1; // データ行番号（ヘッダー除く）
+  return { ok: true, entryNo: entryNo, entryId: 'S-' + String(entryNo).padStart(4, '0') };
 }
 
 // ----------------------------------------------------------------
@@ -310,12 +311,14 @@ function saveDrawing(data) {
 
     // 3. シートのURLを更新
     sheet.getRange(rowIndex, 3).setValue(fileUrl);
-    return { ok: true, fileUrl };
+    const entryNo = rowIndex - 1;
+    return { ok: true, fileUrl, entryNo, entryId: 'D-' + String(entryNo).padStart(4, '0') };
   } catch(err) {
     // Drive保存失敗でもシートにエラーを記録
     sheet.getRange(rowIndex, 3).setValue('Drive保存失敗: ' + err.message);
     sheet.getRange(rowIndex, 4).setValue('エラー');
-    return { error: err.message };
+    const entryNo2 = rowIndex - 1;
+    return { error: err.message, entryNo: entryNo2, entryId: 'D-' + String(entryNo2).padStart(4, '0') };
   }
 }
 

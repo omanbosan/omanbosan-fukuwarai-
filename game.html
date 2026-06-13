@@ -469,17 +469,19 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <!-- 登録フォーム（スクロール不要の位置） -->
     <div id="score-register-section" style="border-top:1px solid #eee;margin-top:12px;padding-top:12px;">
       <div style="font-size:0.82rem;color:#555;margin-bottom:6px;text-align:center;">📋 ランキングに登録する</div>
+      <div style="background:#e8f4fd;border-radius:8px;padding:8px 10px;font-size:0.75rem;color:#2980b9;margin-bottom:8px;line-height:1.6;">
+        📌 投稿すると<b>参加番号</b>が発行されます。<br>画像を保存しておくと番号が確認できます🎫
+      </div>
       <input type="text" id="name-input" placeholder="ニックネーム（最大8文字）" maxlength="8"/>
-      <input type="text" id="score-instagram" placeholder="Instagramアカウント名（必須・@なしでOK）"
+      <input type="text" id="score-instagram" placeholder="Instagramアカウント（任意・@なしでOK）"
         style="width:100%;padding:9px 10px;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;margin-bottom:6px;font-family:inherit;"
         oninput="updateScoreRegisterBtn()"/>
-      <!-- フォロー必須チェック -->
-      <label id="follow-check-label" style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#c0392b;font-weight:bold;margin-bottom:4px;background:#fff3f3;border:1.5px solid #e74c3c;border-radius:8px;padding:8px 10px;cursor:pointer;">
-        <input type="checkbox" id="follow-check" style="margin-top:2px;width:16px;height:16px;accent-color:#e74c3c;flex-shrink:0;" onchange="updateScoreRegisterBtn()">
-        <span><a href="https://www.instagram.com/omanbosan.lv/" target="_blank" style="color:#e74c3c;font-weight:bold;">@omanbosan.lv</a> をフォロー済みです（必須）</span>
+      <!-- フォロー任意チェック -->
+      <label id="follow-check-label" style="display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;color:#888;font-weight:normal;margin-bottom:4px;background:#f9f9f9;border:1.5px solid #ddd;border-radius:8px;padding:8px 10px;cursor:pointer;">
+        <input type="checkbox" id="follow-check" style="margin-top:2px;width:16px;height:16px;flex-shrink:0;" onchange="updateScoreRegisterBtn()">
+        <span><a href="https://www.instagram.com/omanbosan.lv/" target="_blank" style="color:#e74c3c;font-weight:bold;">@omanbosan.lv</a> をフォロー済みです（任意）</span>
       </label>
-      <div style="font-size:0.7rem;color:#e74c3c;margin-bottom:8px;text-align:center;">※ フォローしていない方はランキング登録できません</div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#555;margin-bottom:10px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:#555;margin-bottom:10px;margin-top:6px;">
         <input type="checkbox" id="consent-check" onchange="updateScoreRegisterBtn()">
         この作品の商業利用に同意する（必須）
       </label>
@@ -589,7 +591,7 @@ h1 { font-size: 2rem; color: #c0392b; margin-bottom: 6px; text-shadow: 2px 2px 0
     <button onclick="clearOdekakiCanvas()" style="padding:7px 14px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.85rem;">🗑 全消し</button>
   </div>
   <!-- 図鑑登録フォーム -->
-  <div style="background:white;border:2px solid #27ae60;border-radius:10px;padding:14px;max-width:300px;width:100%;margin-bottom:10px;">
+  <div id="odekaki-form-area" style="background:white;border:2px solid #27ae60;border-radius:10px;padding:14px;max-width:300px;width:100%;margin-bottom:10px;">
     <div style="font-size:0.85rem;font-weight:bold;color:#27ae60;margin-bottom:8px;">📖 図鑑に登録する（必須）</div>
 
     <div style="font-size:0.78rem;color:#555;margin-bottom:4px;">🏷️ キャラクター名（必須・最大10文字）</div>
@@ -1789,66 +1791,121 @@ function drawAnswerComparison() {
   </svg>`;
   document.getElementById('answer-comparison').innerHTML = svgHtml;
 }
+let _scoreRegisterSectionHTML = null;
 function closeScoreModal() {
   document.getElementById('score-modal').classList.remove('show');
   document.getElementById('how-to-overlay').style.display = 'flex';
+  // 登録フォームを元のHTMLに戻す
+  const sec = document.getElementById('score-register-section');
+  if (sec && _scoreRegisterSectionHTML) sec.innerHTML = _scoreRegisterSectionHTML;
+  updateScoreRegisterBtn();
 }
 
 // ================================================================
 // スコア保存（ローカル + GASバックエンドへ送信）
 // ================================================================
 function updateScoreRegisterBtn() {
-  const ig      = (document.getElementById('score-instagram').value || '').trim();
-  const follow  = document.getElementById('follow-check').checked;
   const consent = document.getElementById('consent-check').checked;
   const btn     = document.getElementById('score-register-btn');
   if (!btn) return;
-  const ok = ig.length > 0 && follow && consent;
-  btn.disabled = !ok;
-  btn.style.background  = ok ? '#27ae60' : '#95a5a6';
-  btn.style.cursor      = ok ? 'pointer'  : 'not-allowed';
-  btn.style.opacity     = ok ? '1'        : '0.5';
+  btn.disabled = !consent;
+  btn.style.background  = consent ? '#27ae60' : '#95a5a6';
+  btn.style.cursor      = consent ? 'pointer'  : 'not-allowed';
+  btn.style.opacity     = consent ? '1'        : '0.5';
+}
+
+// 画像に参加番号を焼き込む
+async function stampEntryId(dataUrl, entryId) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      // 番号ラベル（右下）
+      const label = entryId;
+      const fontSize = Math.max(14, Math.round(img.width * 0.05));
+      ctx.font = `bold ${fontSize}px monospace`;
+      const tw = ctx.measureText(label).width;
+      const px = img.width  - tw - 10;
+      const py = img.height - 10;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(px - 6, py - fontSize - 2, tw + 12, fontSize + 8);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(label, px, py);
+      res(c.toDataURL('image/png'));
+    };
+    img.onerror = () => res(dataUrl);
+    img.src = dataUrl;
+  });
 }
 
 async function saveScore() {
-  const followCheck = document.getElementById('follow-check');
-  if (followCheck && !followCheck.checked) {
-    document.getElementById('follow-check-label').style.animation = 'shake 0.3s ease';
-    setTimeout(() => { document.getElementById('follow-check-label').style.animation = ''; }, 400);
-    alert('@omanbosan.lv をフォローしてからチェックを入れてください 📷');
-    return;
-  }
   const name      = (document.getElementById('name-input').value.trim() || '名無し').slice(0,8);
   const instagram = (document.getElementById('score-instagram').value.trim().replace('@','') || '');
-  if (!instagram) {
-    const igInput = document.getElementById('score-instagram');
-    igInput.style.border = '2px solid #e74c3c';
-    igInput.focus();
-    alert('Instagramアカウント名を入力してください（必須）📷');
-    setTimeout(() => { igInput.style.border = '2px solid #ddd'; }, 2000);
-    return;
-  }
   const entry     = { name, score: lastScore, date: new Date().toLocaleDateString('ja-JP'), instagram };
-  // ローカルに保存（オフライン対応）
+  // ローカルに保存
   const local = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
   local.push(entry);
   local.sort((a,b) => b.score - a.score);
   local.splice(20);
   localStorage.setItem('omanbo_illust_v1', JSON.stringify(local));
-  // GASバックエンドへ送信
+
+  const btn = document.getElementById('score-register-btn');
+  if (btn) { btn.textContent = '送信中...'; btn.disabled = true; }
+
+  let entryId = null;
   if (WEBHOOK_URL) {
-    fetch(WEBHOOK_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        type: 'score', name, score: lastScore, instagram,
-        difficulty: currentDifficulty,
-        image: lastFreehandImage
-      })
-    }).catch(()=>{});
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          type: 'score', name, score: lastScore, instagram,
+          difficulty: currentDifficulty,
+          image: lastFreehandImage
+        })
+      });
+      const json = await res.json().catch(() => ({}));
+      entryId = json.entryId || null;
+    } catch(e) {}
   }
-  closeScoreModal();
-  showRanking();
+
+  // 番号を画像に焼き込んで更新
+  if (entryId) {
+    const cleanImg = document.getElementById('result-img-clean');
+    if (cleanImg && cleanImg.src && cleanImg.src.startsWith('data:')) {
+      cleanImg.src = await stampEntryId(cleanImg.src, entryId);
+    }
+    const resultImg = document.getElementById('result-img');
+    if (resultImg && resultImg.src && resultImg.src.startsWith('data:')) {
+      resultImg.src = await stampEntryId(resultImg.src, entryId);
+    }
+  }
+
+  if (btn) { btn.textContent = '🏆 登録！'; btn.disabled = false; }
+
+  // 登録フォームを参加番号表示に切り替え
+  const registerSection = document.getElementById('score-register-section');
+  if (registerSection) {
+    registerSection.innerHTML = `
+      <div style="text-align:center;padding:16px 8px;">
+        <div style="font-size:0.9rem;color:#27ae60;font-weight:bold;margin-bottom:10px;">✅ 登録完了！</div>
+        ${entryId ? `
+          <div style="background:#fff8e1;border:2px solid #f39c12;border-radius:12px;padding:14px;margin-bottom:12px;">
+            <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">あなたの参加番号</div>
+            <div style="font-size:2rem;font-weight:bold;color:#e67e22;letter-spacing:2px;">${entryId}</div>
+            <div style="font-size:0.72rem;color:#999;margin-top:6px;">📸 下の画像に番号が記載されています<br>長押しで保存しておいてね！</div>
+          </div>
+          <div style="font-size:0.75rem;color:#888;line-height:1.7;">
+            🎁 結果はインスタ・LINEで発表予定です<br>
+            番号で当選確認ができます
+          </div>
+        ` : `<div style="font-size:0.85rem;color:#555;">ランキングに登録しました🎉</div>`}
+      </div>
+    `;
+  }
 }
 
 // ================================================================
@@ -2376,10 +2433,11 @@ async function saveOdekakiImage() {
   }
 
   // GASバックエンドへ送信
+  let entryId = null;
   if (WEBHOOK_URL) {
     try {
-      await fetch(WEBHOOK_URL, {
-        method: 'POST', mode: 'no-cors',
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST', redirect: 'follow',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           type: 'drawing',
@@ -2392,10 +2450,40 @@ async function saveOdekakiImage() {
           consentAt: new Date().toLocaleString('ja-JP')
         })
       });
+      const json = await res.json().catch(() => ({}));
+      entryId = json.entryId || null;
     } catch(e) {}
   }
-  alert(`✅ 投稿ありがとうございます！\n「${villageName}」として受け付けました🎉\n\nおまんぼさんスタッフが内容を確認してから\n図鑑に公開しますので、\n反映は明日以降になります🌿\n\n画像は上の丸い画像を長押しして保存📲\nインスタグラムに投稿して\n#おまんぼさんイラスト をつけてね！\n\n作者: ${penname}`);
+
+  // 番号を画像に焼き込んで更新
+  if (entryId && resultImg.src && resultImg.src.startsWith('data:')) {
+    resultImg.src = await stampEntryId(resultImg.src, entryId);
+  }
+
   btn.textContent = '💾 投稿＆図鑑登録する'; btn.disabled = false; btn.style.opacity = '1';
+
+  // 登録フォームエリアを参加番号表示に切り替え
+  const formArea = document.getElementById('odekaki-form-area');
+  if (formArea && entryId) {
+    formArea.innerHTML = `
+      <div style="text-align:center;padding:12px 8px;">
+        <div style="font-size:0.9rem;color:#27ae60;font-weight:bold;margin-bottom:10px;">✅ 投稿完了！「${villageName}」として受け付けました🎉</div>
+        <div style="background:#fff8e1;border:2px solid #f39c12;border-radius:12px;padding:14px;margin-bottom:12px;">
+          <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">あなたの参加番号</div>
+          <div style="font-size:2rem;font-weight:bold;color:#e67e22;letter-spacing:2px;">${entryId}</div>
+          <div style="font-size:0.72rem;color:#999;margin-top:6px;">📸 上の画像に番号が記載されています<br>長押しで保存しておいてね！</div>
+        </div>
+        <div style="font-size:0.75rem;color:#888;line-height:1.7;">
+          🎁 結果はインスタ・LINEで発表予定です<br>
+          番号で当選確認ができます<br><br>
+          スタッフが内容を確認してから図鑑に公開します🌿<br>
+          反映は明日以降になります
+        </div>
+      </div>
+    `;
+  } else {
+    alert(`✅ 投稿ありがとうございます！\n「${villageName}」として受け付けました🎉\n\nスタッフが確認後、図鑑に公開します🌿`);
+  }
 }
 
 // ================================================================
@@ -2901,6 +2989,9 @@ window.addEventListener('load', () => {
   setTimeout(prefetchZukan, 1500);
   // 採点図鑑も先読み（こちらの方が重いので早めに開始）
   setTimeout(prefetchZukanScoring, 2500);
+  // 登録フォームのHTMLを保存（クローズ時のリセット用）
+  const _sec = document.getElementById('score-register-section');
+  if (_sec) _scoreRegisterSectionHTML = _sec.innerHTML;
   // オープニング画面の星パーティクル初期化
   initOpeningStars();
 });
