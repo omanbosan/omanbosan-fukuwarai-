@@ -366,6 +366,7 @@ function renderCards() {
         </div>
         <div class="card-name" style="color:${dColor};">${entry.score}点</div>
         <div class="card-comment">${entry.name || '名無し'}</div>
+        ${entry.entryId ? `<div style="text-align:center;margin-bottom:4px;"><span style="background:#fff3cd;border:1px solid #f39c12;border-radius:6px;padding:2px 8px;font-size:0.75rem;font-weight:bold;color:#e67e22;font-family:monospace;">🎫 No.${entry.entryId}</span></div>` : ''}
         <div class="card-ig">${entry.instagram ? '@'+entry.instagram : '（Instagram未登録）'}</div>
         <div class="card-date">${entry.date}</div>
         <div class="card-status status-${statusClass[approved]}">${statusLabel[approved]}</div>
@@ -387,6 +388,7 @@ function renderCards() {
         <div class="card-img-placeholder" style="${entry.imageUrl ? 'display:none' : ''}">🎨</div>
         <div class="card-name">${entry.villageName || '（名前なし）'}</div>
         ${entry.comment ? `<div class="card-comment">「${entry.comment}」</div>` : ''}
+        ${entry.entryId ? `<div style="text-align:center;margin-bottom:4px;"><span style="background:#fff3cd;border:1px solid #f39c12;border-radius:6px;padding:2px 8px;font-size:0.75rem;font-weight:bold;color:#e67e22;font-family:monospace;">🎫 No.${entry.entryId}</span></div>` : ''}
         <div class="card-ig">@${entry.instagram}</div>
         <div class="card-date">${entry.date}</div>
         <div class="card-status status-${statusClass[approved]}">${statusLabel[approved]}</div>

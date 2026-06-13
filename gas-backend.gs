@@ -155,7 +155,7 @@ function getZukanScoring() {
     date:       r[2] ? String(r[2]).slice(0, 10) : '',
     imageUrl:   driveUrlToThumb(r[4]),
     difficulty: r[5] || 'normal'
-  })).reverse();
+  })); // 登録順（古い順 = No.1が最初）
 }
 
 // ----------------------------------------------------------------
@@ -166,7 +166,7 @@ function getPending() {
   const sheet = ss.getSheetByName('drawings');
   if (!sheet || sheet.getLastRow() < 2) return [];
 
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 12).getValues()
     .map((r, i) => ({
       row:         i + 2,
       instagram:   (r[0] || '').replace('@', ''),
@@ -176,19 +176,20 @@ function getPending() {
       comment:     r[5] || '',
       approved:    r[7] || '審査中',
       penname:     r[8] || '',
-      igShow:      r[9] === true || r[9] === 'TRUE'
+      igShow:      r[9] === true || r[9] === 'TRUE',
+      entryId:     r[11] || ''
     }))
     .filter(r => r.villageName);
 }
 
 // scores シートの審査待ちエントリ（管理画面用）
-// scores列: 名前(1), スコア(2), 日付(3), Instagram(4), imageUrl(5), 難易度(6), 承認(7)
+// scores列: 名前(1), スコア(2), 日付(3), Instagram(4), imageUrl(5), 難易度(6), 承認(7), 参加番号(8)
 function getPendingScores() {
   const ss    = SpreadsheetApp.openById(CONFIG.sheetId);
   const sheet = ss.getSheetByName('scores');
   if (!sheet || sheet.getLastRow() < 2) return [];
 
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues()
     .map((r, i) => ({
       row:        i + 2,
       name:       r[0] || '名無し',
@@ -197,7 +198,8 @@ function getPendingScores() {
       instagram:  (r[3] || '').replace('@', ''),
       imageUrl:   driveUrlToThumb(r[4]),
       difficulty: r[5] || 'normal',
-      approved:   r[6] || '審査中'
+      approved:   r[6] || '審査中',
+      entryId:    r[7] || ''
     }))
     .filter(r => r.name);
 }
@@ -250,7 +252,7 @@ function getZukan() {
     comment:     r[5] || '',
     penname:     r[8] || '',
     igShow:      r[9] === true || r[9] === 'TRUE'
-  })).reverse(); // 新しい順
+  })); // 登録順（古い順 = No.1が最初）
 }
 
 // ----------------------------------------------------------------
