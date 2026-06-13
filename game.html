@@ -1814,8 +1814,13 @@ function updateScoreRegisterBtn() {
   btn.style.opacity     = consent ? '1'        : '0.5';
 }
 
-// 画像に参加番号を焼き込む
-async function stampEntryId(dataUrl, entryId) {
+// 4桁の照合コードを生成
+function generateVerifyCode() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+// 画像に参加番号＋照合コードを焼き込む
+async function stampEntryId(dataUrl, entryId, verifyCode) {
   return new Promise(res => {
     const img = new Image();
     img.onload = () => {
@@ -1823,17 +1828,21 @@ async function stampEntryId(dataUrl, entryId) {
       c.width = img.width; c.height = img.height;
       const ctx = c.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      // 番号ラベル（右下）
-      const label = entryId;
-      const fontSize = Math.max(14, Math.round(img.width * 0.05));
+      const fontSize = Math.max(13, Math.round(img.width * 0.045));
       ctx.font = `bold ${fontSize}px monospace`;
-      const tw = ctx.measureText(label).width;
-      const px = img.width  - tw - 10;
-      const py = img.height - 10;
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.fillRect(px - 6, py - fontSize - 2, tw + 12, fontSize + 8);
+      // 2行: 番号と照合コード
+      const line1 = entryId;
+      const line2 = verifyCode ? `CODE:${verifyCode}` : '';
+      const tw = Math.max(ctx.measureText(line1).width, verifyCode ? ctx.measureText(line2).width : 0);
+      const lines = verifyCode ? 2 : 1;
+      const boxH = fontSize * lines + (lines - 1) * 4 + 12;
+      const px = img.width  - tw - 16;
+      const py = img.height - boxH - 6;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(px - 6, py, tw + 18, boxH);
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(label, px, py);
+      ctx.fillText(line1, px, py + fontSize + 2);
+      if (line2) ctx.fillText(line2, px, py + fontSize * 2 + 6);
       res(c.toDataURL('image/png'));
     };
     img.onerror = () => res(dataUrl);
@@ -1844,8 +1853,9 @@ async function stampEntryId(dataUrl, entryId) {
 async function saveScore() {
   const name      = (document.getElementById('name-input').value.trim() || '名無し').slice(0,8);
   const instagram = (document.getElementById('score-instagram').value.trim().replace('@','') || '');
+  const verifyCode = generateVerifyCode(); // 照合コード（クライアント生成）
+
   const entry     = { name, score: lastScore, date: new Date().toLocaleDateString('ja-JP'), instagram };
-  // ローカルに保存
   const local = JSON.parse(localStorage.getItem('omanbo_illust_v1') || '[]');
   local.push(entry);
   local.sort((a,b) => b.score - a.score);
@@ -1864,7 +1874,8 @@ async function saveScore() {
         body: JSON.stringify({
           type: 'score', name, score: lastScore, instagram,
           difficulty: currentDifficulty,
-          image: lastFreehandImage
+          image: lastFreehandImage,
+          verifyCode
         })
       });
       const json = await res.json().catch(() => ({}));
@@ -1872,21 +1883,20 @@ async function saveScore() {
     } catch(e) {}
   }
 
-  // 番号を画像に焼き込んで更新
+  // 番号＋照合コードを画像に焼き込んで更新
   if (entryId) {
     const cleanImg = document.getElementById('result-img-clean');
     if (cleanImg && cleanImg.src && cleanImg.src.startsWith('data:')) {
-      cleanImg.src = await stampEntryId(cleanImg.src, entryId);
+      cleanImg.src = await stampEntryId(cleanImg.src, entryId, verifyCode);
     }
     const resultImg = document.getElementById('result-img');
     if (resultImg && resultImg.src && resultImg.src.startsWith('data:')) {
-      resultImg.src = await stampEntryId(resultImg.src, entryId);
+      resultImg.src = await stampEntryId(resultImg.src, entryId, verifyCode);
     }
   }
 
   if (btn) { btn.textContent = '🏆 登録！'; btn.disabled = false; }
 
-  // 登録フォームを参加番号表示に切り替え
   const registerSection = document.getElementById('score-register-section');
   if (registerSection) {
     registerSection.innerHTML = `
@@ -1894,13 +1904,17 @@ async function saveScore() {
         <div style="font-size:0.9rem;color:#27ae60;font-weight:bold;margin-bottom:10px;">✅ 登録完了！</div>
         ${entryId ? `
           <div style="background:#fff8e1;border:2px solid #f39c12;border-radius:12px;padding:14px;margin-bottom:12px;">
-            <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">あなたの参加番号</div>
+            <div style="font-size:0.78rem;color:#888;margin-bottom:6px;">あなたの参加番号</div>
             <div style="font-size:2rem;font-weight:bold;color:#e67e22;letter-spacing:2px;">${entryId}</div>
-            <div style="font-size:0.72rem;color:#999;margin-top:6px;">📸 下の画像に番号が記載されています<br>長押しで保存しておいてね！</div>
+            <div style="margin-top:8px;padding:6px 10px;background:#fce4ec;border-radius:8px;display:inline-block;">
+              <div style="font-size:0.7rem;color:#c0392b;margin-bottom:2px;">🔑 照合コード（当選確認に必要）</div>
+              <div style="font-size:1.5rem;font-weight:bold;color:#c0392b;letter-spacing:3px;">${verifyCode}</div>
+            </div>
+            <div style="font-size:0.7rem;color:#999;margin-top:8px;">📸 下の画像に番号と照合コードが記載されています<br>長押しで保存しておいてね！<br><b style="color:#e74c3c;">※ 照合コードは他の人に見せないでください</b></div>
           </div>
-          <div style="font-size:0.75rem;color:#888;line-height:1.7;">
-            🎁 結果はインスタ・LINEで発表予定です<br>
-            番号で当選確認ができます
+          <div style="font-size:0.72rem;color:#888;line-height:1.8;">
+            🎁 結果はインスタ・LINEで発表予定<br>
+            当選確認には<b>参加番号＋照合コード</b>の両方が必要です
           </div>
         ` : `<div style="font-size:0.85rem;color:#555;">ランキングに登録しました🎉</div>`}
       </div>
@@ -2433,6 +2447,7 @@ async function saveOdekakiImage() {
   }
 
   // GASバックエンドへ送信
+  const verifyCode = generateVerifyCode();
   let entryId = null;
   if (WEBHOOK_URL) {
     try {
@@ -2447,7 +2462,8 @@ async function saveOdekakiImage() {
           villageName: villageName,
           comment: comment,
           image: dataUrl,
-          consentAt: new Date().toLocaleString('ja-JP')
+          consentAt: new Date().toLocaleString('ja-JP'),
+          verifyCode
         })
       });
       const json = await res.json().catch(() => ({}));
@@ -2455,27 +2471,30 @@ async function saveOdekakiImage() {
     } catch(e) {}
   }
 
-  // 番号を画像に焼き込んで更新
+  // 番号＋照合コードを画像に焼き込んで更新
   if (entryId && resultImg.src && resultImg.src.startsWith('data:')) {
-    resultImg.src = await stampEntryId(resultImg.src, entryId);
+    resultImg.src = await stampEntryId(resultImg.src, entryId, verifyCode);
   }
 
   btn.textContent = '💾 投稿＆図鑑登録する'; btn.disabled = false; btn.style.opacity = '1';
 
-  // 登録フォームエリアを参加番号表示に切り替え
   const formArea = document.getElementById('odekaki-form-area');
   if (formArea && entryId) {
     formArea.innerHTML = `
       <div style="text-align:center;padding:12px 8px;">
         <div style="font-size:0.9rem;color:#27ae60;font-weight:bold;margin-bottom:10px;">✅ 投稿完了！「${villageName}」として受け付けました🎉</div>
-        <div style="background:#fff8e1;border:2px solid #f39c12;border-radius:12px;padding:14px;margin-bottom:12px;">
-          <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">あなたの参加番号</div>
+        <div style="background:#fff8e1;border:2px solid #f39c12;border-radius:12px;padding:14px;margin-bottom:10px;">
+          <div style="font-size:0.78rem;color:#888;margin-bottom:6px;">あなたの参加番号</div>
           <div style="font-size:2rem;font-weight:bold;color:#e67e22;letter-spacing:2px;">${entryId}</div>
-          <div style="font-size:0.72rem;color:#999;margin-top:6px;">📸 上の画像に番号が記載されています<br>長押しで保存しておいてね！</div>
+          <div style="margin-top:8px;padding:6px 10px;background:#fce4ec;border-radius:8px;display:inline-block;">
+            <div style="font-size:0.7rem;color:#c0392b;margin-bottom:2px;">🔑 照合コード（当選確認に必要）</div>
+            <div style="font-size:1.5rem;font-weight:bold;color:#c0392b;letter-spacing:3px;">${verifyCode}</div>
+          </div>
+          <div style="font-size:0.7rem;color:#999;margin-top:8px;">📸 上の画像に番号と照合コードが記載されています<br>長押しで保存しておいてね！<br><b style="color:#e74c3c;">※ 照合コードは他の人に見せないでください</b></div>
         </div>
-        <div style="font-size:0.75rem;color:#888;line-height:1.7;">
-          🎁 結果はインスタ・LINEで発表予定です<br>
-          番号で当選確認ができます<br><br>
+        <div style="font-size:0.72rem;color:#888;line-height:1.8;">
+          🎁 結果はインスタ・LINEで発表予定<br>
+          当選確認には<b>参加番号＋照合コード</b>の両方が必要です<br><br>
           スタッフが内容を確認してから図鑑に公開します🌿<br>
           反映は明日以降になります
         </div>

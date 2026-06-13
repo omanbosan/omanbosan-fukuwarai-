@@ -103,15 +103,17 @@ function saveScore(data) {
   if (colCount < 5) sheet.getRange(1, 5).setValue('画像URL');
   if (colCount < 6) sheet.getRange(1, 6).setValue('難易度');
   if (colCount < 7) sheet.getRange(1, 7).setValue('承認');
+  if (colCount < 8) sheet.getRange(1, 8).setValue('照合コード');
 
   const name       = (data.name || '名無し').slice(0, 20);
   const score      = Number(data.score) || 0;
   const instagram  = (data.instagram || '').replace('@', '');
   const difficulty = data.difficulty || 'normal';
+  const verifyCode = String(data.verifyCode || '');
   const rowIndex   = sheet.getLastRow() + 1;
 
   sheet.appendRow([name, score, new Date().toLocaleDateString('ja-JP'), instagram,
-                   'Drive保存中...', difficulty, '審査中']);
+                   'Drive保存中...', difficulty, '審査中', verifyCode]);
 
   // Drive に画像を保存
   if (data.image) {
@@ -280,10 +282,12 @@ function saveDrawing(data) {
   if (colCount < 9)  sheet.getRange(1, 9).setValue('ペンネーム');
   if (colCount < 10) sheet.getRange(1, 10).setValue('IG表示');
   if (colCount < 11) sheet.getRange(1, 11).setValue('著作権同意日時');
+  if (colCount < 12) sheet.getRange(1, 12).setValue('照合コード');
 
-  const consentAt = data.consentAt || '';
-  const zukanNo   = Math.max(sheet.getLastRow(), 1);
-  const rowIndex  = sheet.getLastRow() + 1;
+  const consentAt  = data.consentAt || '';
+  const verifyCode = String(data.verifyCode || '');
+  const zukanNo    = Math.max(sheet.getLastRow(), 1);
+  const rowIndex   = sheet.getLastRow() + 1;
   sheet.appendRow([
     ig ? '@' + ig : '',
     new Date().toLocaleString('ja-JP'),
@@ -295,7 +299,8 @@ function saveDrawing(data) {
     '審査中',
     penname,
     igShow,
-    consentAt
+    consentAt,
+    verifyCode
   ]);
 
   // 2. Drive に保存
